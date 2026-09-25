@@ -1,6 +1,6 @@
-# [Project name]
+# CallShield
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+CallShield reviews call recordings and transcripts for spam signals, exposes model evaluation metrics, and makes uncertainty visible to the reviewer.
 
 ## Run & Operate
 
@@ -22,23 +22,36 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/spam-call-detector/` — React/Vite web app with analyze and model bench routes
+- `artifacts/api-server/src/routes/detection.ts` — transcription, prediction, metrics, and dashboard API
+- `lib/api-spec/openapi.yaml` — source of truth for the API contract
+- `ml_pipeline/` — Python training, preprocessing, Whisper inference, and setup notes
+- `artifacts/spam-call-detector/src/index.css` — CallShield theme tokens and visual language
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The browser uses the generated API client from the OpenAPI contract; the API remains stateless because model artifacts are trained locally and can be swapped in later.
+- The first-run API uses an explicit heuristic/demo mode so the UI is usable without downloading Whisper weights or a project-specific labeled dataset; it never presents demo output as trained inference.
+- Production ML work lives in `ml_pipeline/`: `train.py` compares all eight requested classifiers and persists the vectorizer plus recommended model with joblib.
+- Uploaded audio is accepted as multipart by the API without adding a server upload dependency; the current endpoint returns an explicit demo transcript until the Python Whisper path is deployed.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Analyze a pasted transcript or audio recording
+- Capture audio from a microphone, preview it, and inspect an upload waveform
+- See spam/not-spam assessment, confidence, detected signals, and engineered features
+- Compare all eight classifiers with accuracy, precision, recall, F1, ROC-AUC, PR-AUC, log loss, latency, training time, and confusion matrices
+- Retrain with `ml_pipeline/train.py`, then run local audio inference with selectable Whisper model sizes
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+_No project-specific preferences recorded._
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Audio upload currently reports `demo` mode until Whisper dependencies, weights, and a labeled dataset are installed and connected.
+- Run `pnpm --filter @workspace/api-spec run codegen` after changing `lib/api-spec/openapi.yaml`.
+- The web artifact workflow supplies `PORT` and `BASE_PATH`; do not run the Vite command manually without those environment variables.
 
 ## Pointers
 

@@ -1,0 +1,78 @@
+Build a full-stack ML application that detects spam calls from audio recordings.
+The system should:
+
+### 1. Speech-to-Text (Whisper)
+- Use OpenAI's open-source Whisper model (whisper.cpp or the `openai-whisper` 
+  Python package) to transcribe call audio to text.
+- Support multiple model sizes (tiny, base, small, medium) with a config 
+  toggle for speed vs accuracy tradeoff.
+- Handle common audio formats (wav, mp3, m4a) and auto-resample to 16kHz mono.
+- Output: raw transcript + confidence/segments with timestamps.
+
+### 2. Text Preprocessing & Feature Extraction
+- Clean transcript: lowercase, remove punctuation/stopwords, lemmatize.
+- Extract features using:
+  - TF-IDF vectorization
+  - Word embeddings (e.g. Word2Vec / sentence-transformers) as an alternative 
+    feature set to compare against TF-IDF
+- Additional engineered features: call duration, word count, presence of 
+  urgency/money/OTP keywords, speech rate.
+
+### 3. Multi-Model Classification (Spam vs Not Spam)
+Train and compare ALL of the following algorithms on the same train/test split:
+  - Logistic Regression
+  - Naive Bayes (MultinomialNB)
+  - Support Vector Machine (SVM)
+  - Decision Tree
+  - Random Forest
+  - Gradient Boosting (XGBoost / LightGBM)
+  - K-Nearest Neighbors
+  - Multi-Layer Perceptron (Neural Network)
+Use stratified k-fold cross-validation and grid search / Optuna for 
+hyperparameter tuning on each model.
+
+### 4. Evaluation — Report ALL Metrics Per Model
+  - Accuracy
+  - Precision, Recall, F1-score (macro + weighted)
+  - ROC-AUC and PR-AUC
+  - Confusion Matrix (plotted)
+  - Log Loss
+  - Training time / inference latency
+Produce a comparison table + bar charts ranking models on each metric, and 
+recommend the best model for deployment (balancing accuracy and latency).
+
+### 5. Model Persistence
+- Save the trained vectorizer + best model (joblib/pickle or ONNX).
+- Build a simple inference pipeline: audio → Whisper transcript → features → 
+  prediction → spam probability score.
+
+### 6. Backend API
+- FastAPI (or Flask) backend with endpoints:
+  - POST /transcribe — audio in, transcript out
+  - POST /predict — audio or text in, spam/not-spam + confidence out
+  - GET /metrics — returns saved model comparison metrics as JSON
+
+### 7. Frontend (beautiful, modern UI)
+- Framework: React + Tailwind CSS (or plain HTML/CSS/JS if simpler).
+- Features:
+  - Drag-and-drop / record audio upload widget with waveform preview
+  - Live transcript display as it's processed
+  - Spam/Not-Spam verdict shown as a clear badge with confidence gauge/meter
+  - Dashboard page comparing all trained models (sortable metrics table + 
+    charts: bar chart for accuracy/F1, ROC curve overlay, confusion matrices)
+  - Dark/light theme, responsive layout, smooth loading states/animations
+
+### Tech Stack
+- STT: openai-whisper / faster-whisper
+- ML: scikit-learn, xgboost, lightgbm, pandas, numpy
+- Viz: matplotlib/seaborn (training) + recharts/chart.js (frontend)
+- Backend: FastAPI
+- Frontend: React + Tailwind (or specify your preference)
+
+### Deliverables
+1. Data pipeline & preprocessing script
+2. Model training script that outputs a full metrics comparison report
+3. Saved best model + inference pipeline
+4. REST API
+5. Frontend app connected to the API
+6. README with setup, how to retrain, and how to run

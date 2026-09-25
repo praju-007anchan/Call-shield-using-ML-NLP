@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: detection
+    description: Call transcription and spam detection
+  - name: analytics
+    description: Model evaluation and dashboard analytics
 paths:
   /healthz:
     get:
@@ -24,6 +28,79 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /transcribe:
+    post:
+      operationId: transcribeAudio
+      tags: [detection]
+      summary: Transcribe a call recording
+      description: Transcribes audio with the configured speech-to-text model. When Whisper is not installed, the response identifies demo mode rather than implying a production transcript.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/TranscriptionInput"
+      responses:
+        "200":
+          description: Transcription result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranscriptionResult"
+        "400":
+          description: Invalid audio upload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /predict:
+    post:
+      operationId: predictCall
+      tags: [detection]
+      summary: Predict whether call text is spam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictionInput"
+      responses:
+        "200":
+          description: Spam classification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionResult"
+        "400":
+          description: Invalid prediction input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /metrics:
+    get:
+      operationId: getMetrics
+      tags: [analytics]
+      summary: Get model comparison metrics
+      responses:
+        "200":
+          description: Model evaluation metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsResponse"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [analytics]
+      summary: Get the detector dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +110,162 @@ components:
           type: string
       required:
         - status
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    TranscriptionInput:
+      type: object
+      properties:
+        audio:
+          type: string
+          format: binary
+        model:
+          type: string
+          enum: [tiny, base, small, medium]
+      required: [audio]
+    TranscriptSegment:
+      type: object
+      properties:
+        id:
+          type: integer
+        start:
+          type: number
+        end:
+          type: number
+        text:
+          type: string
+        confidence:
+          type: number
+      required: [id, start, end, text, confidence]
+    TranscriptionResult:
+      type: object
+      properties:
+        transcript:
+          type: string
+        language:
+          type: string
+        durationSeconds:
+          type: number
+        model:
+          type: string
+        mode:
+          type: string
+          enum: [whisper, demo]
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/TranscriptSegment"
+      required: [transcript, language, durationSeconds, model, mode, segments]
+    PredictionInput:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        durationSeconds:
+          type: number
+          minimum: 0
+        speechRate:
+          type: number
+          minimum: 0
+      required: [text]
+    PredictionResult:
+      type: object
+      properties:
+        label:
+          type: string
+          enum: [spam, not_spam]
+        probability:
+          type: number
+        confidence:
+          type: number
+        model:
+          type: string
+        mode:
+          type: string
+          enum: [trained, heuristic]
+        signals:
+          type: array
+          items:
+            type: string
+        features:
+          type: object
+          additionalProperties:
+            type: number
+      required: [label, probability, confidence, model, mode, signals, features]
+    ModelMetric:
+      type: object
+      properties:
+        model:
+          type: string
+        family:
+          type: string
+        accuracy:
+          type: number
+        precisionMacro:
+          type: number
+        recallMacro:
+          type: number
+        f1Macro:
+          type: number
+        precisionWeighted:
+          type: number
+        recallWeighted:
+          type: number
+        f1Weighted:
+          type: number
+        rocAuc:
+          type: number
+        prAuc:
+          type: number
+        logLoss:
+          type: number
+        trainingTimeMs:
+          type: number
+        inferenceLatencyMs:
+          type: number
+        confusionMatrix:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+      required: [model, family, accuracy, precisionMacro, recallMacro, f1Macro, precisionWeighted, recallWeighted, f1Weighted, rocAuc, prAuc, logLoss, trainingTimeMs, inferenceLatencyMs, confusionMatrix]
+    MetricsResponse:
+      type: object
+      properties:
+        dataset:
+          type: string
+        featureSet:
+          type: string
+        split:
+          type: string
+        trainedAt:
+          type: string
+        recommendedModel:
+          type: string
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModelMetric"
+      required: [dataset, featureSet, split, trainedAt, recommendedModel, metrics]
+    DashboardSummary:
+      type: object
+      properties:
+        callsAnalyzed:
+          type: integer
+        spamRate:
+          type: number
+        avgConfidence:
+          type: number
+        avgLatencyMs:
+          type: number
+        modelStatus:
+          type: string
+        topSignal:
+          type: string
+      required: [callsAnalyzed, spamRate, avgConfidence, avgLatencyMs, modelStatus, topSignal]
 
