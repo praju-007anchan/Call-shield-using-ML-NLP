@@ -1,6 +1,6 @@
 # CallShield ML pipeline
 
-The web app ships with transparent demo metrics and a heuristic transcript classifier so it is usable before model weights and a labeled dataset are available. This folder contains the production training path described in the build brief.
+The web app uses Faster-Whisper for real audio-to-text transcription and a transparent heuristic classifier until a trained call model is available. This folder contains the production training path described in the build brief.
 
 ## Train
 
@@ -22,3 +22,7 @@ python ml_pipeline/inference.py recordings/incoming.mp3 \
 ```
 
 `faster-whisper` accepts WAV, MP3, and M4A when ffmpeg is available. Whisper models are selectable with `tiny`, `base`, `small`, or `medium`; use `tiny` for fast iteration and `small`/`medium` for stronger transcription.
+
+## Web app transcription
+
+The web app sends uploaded WAV, MP3, M4A, and browser-recorded WebM files to `POST /api/transcribe`. The API temporarily stores the bytes, runs the selected Faster-Whisper model, returns the full transcript plus timestamped segments, and removes the temporary file.

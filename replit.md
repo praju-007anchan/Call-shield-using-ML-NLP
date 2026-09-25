@@ -31,9 +31,9 @@ CallShield reviews call recordings and transcripts for spam signals, exposes mod
 ## Architecture decisions
 
 - The browser uses the generated API client from the OpenAPI contract; the API remains stateless because model artifacts are trained locally and can be swapped in later.
-- The first-run API uses an explicit heuristic/demo mode so the UI is usable without downloading Whisper weights or a project-specific labeled dataset; it never presents demo output as trained inference.
+- The first-run API uses an explicit heuristic mode for spam scoring and a real Faster-Whisper worker for audio transcription; static model-bench numbers remain labeled as demo metrics until a project dataset is trained.
 - Production ML work lives in `ml_pipeline/`: `train.py` compares all eight requested classifiers and persists the vectorizer plus recommended model with joblib.
-- Uploaded audio is accepted as multipart by the API without adding a server upload dependency; the current endpoint returns an explicit demo transcript until the Python Whisper path is deployed.
+- Uploaded audio is accepted as multipart, written to a temporary file for transcription, and deleted after the Faster-Whisper worker returns timestamped segments.
 
 ## Product
 
@@ -49,7 +49,7 @@ _No project-specific preferences recorded._
 
 ## Gotchas
 
-- Audio upload currently reports `demo` mode until Whisper dependencies, weights, and a labeled dataset are installed and connected.
+- The first transcription with a new Whisper size downloads its model weights; if the runtime is unavailable, the API returns a setup error instead of fake transcript text.
 - Run `pnpm --filter @workspace/api-spec run codegen` after changing `lib/api-spec/openapi.yaml`.
 - The web artifact workflow supplies `PORT` and `BASE_PATH`; do not run the Vite command manually without those environment variables.
 

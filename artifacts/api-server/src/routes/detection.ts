@@ -1,4 +1,10 @@
 import { Router, type IRouter, type Request } from "express";
+import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { rm, writeFile } from "node:fs/promises";
+import { extname, join, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import {
   GetDashboardResponse,
   GetMetricsResponse,
@@ -64,10 +70,10 @@ function classifyText(input: { text: string; durationSeconds?: number; speechRat
   });
 }
 
-async function readUploadMetadata(req: Request) {
+async function readUpload(req: Request) {
   const contentType = req.headers["content-type"] ?? "";
-  const boundaryMatch = contentType.match(/boundary=([^;]+)/i);
-  if (!boundaryMatch) return { fileName: "recording", model: "base", byteLength: 0 };
+  const boundaryMatch = contentType.match(/boundary="?([^";]+)"?/i);
+  if (!boundaryMatch) throw new Error("Audio upload must use multipart/form-data.");
   const chunks: Buffer[] = [];
   let total = 0;
   for await (const chunk of req) {
@@ -75,37 +81,90 @@ async function readUploadMetadata(req: Request) {
     if (total > 15_000_000) throw new Error("Audio file is larger than the 15 MB limit.");
     chunks.push(Buffer.from(chunk));
   }
-  const body = Buffer.concat(chunks).toString("latin1");
-  const fileHeader = body.match(/filename="([^"]+)"/i);
-  const modelMatch = body.match(/name="model"\r\n\r\n([^\r\n]+)/i);
+  const body = Buffer.concat(chunks);
+  const headerEnd = body.indexOf(Buffer.from("\r\n\r\n"));
+  const boundary = Buffer.from(`\r\n--${boundaryMatch[1]}`);
+  const fileEnd = headerEnd >= 0 ? body.indexOf(boundary, headerEnd + 4) : -1;
+  if (headerEnd < 0 || fileEnd < 0) throw new Error("The uploaded audio file could not be read.");
+  const header = body.subarray(0, headerEnd).toString("latin1");
+  const fileHeader = header.match(/filename="([^"]+)"/i);
+  const fileBytes = body.subarray(headerEnd + 4, fileEnd);
+  if (!fileBytes.length) throw new Error("The uploaded audio file is empty.");
+  const metadataText = body.toString("latin1");
+  const modelMatch = metadataText.match(/name="model"\r\n\r\n([^\r\n]+)/i);
   return {
     fileName: fileHeader?.[1] ?? "recording",
     model: modelMatch?.[1] ?? "base",
     byteLength: total,
+    fileBytes,
   };
 }
 
+function runWhisper(audioPath: string, model: string) {
+  return new Promise<Record<string, unknown>>((resolveResult, reject) => {
+    const scriptPath = [
+      resolve(process.cwd(), "ml_pipeline", "transcribe_worker.py"),
+      resolve(process.cwd(), "..", "..", "ml_pipeline", "transcribe_worker.py"),
+    ].find(existsSync);
+    if (!scriptPath) {
+      reject(new Error("Whisper worker is not installed in ml_pipeline."));
+      return;
+    }
+    const python = process.env.PYTHON_BIN ?? "python3";
+    const child = spawn(python, [scriptPath, "--audio", audioPath, "--model", model], {
+      env: { ...process.env, PYTHONUNBUFFERED: "1" },
+    });
+    let stdout = "";
+    let stderr = "";
+    const timeout = setTimeout(() => {
+      child.kill("SIGTERM");
+      reject(new Error("Whisper transcription timed out after 10 minutes."));
+    }, 10 * 60 * 1000);
+    child.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
+    child.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
+    child.on("error", (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timeout);
+      if (code !== 0) {
+        reject(new Error(stderr.trim() || `Whisper exited with code ${code ?? "unknown"}.`));
+        return;
+      }
+      try {
+        resolveResult(JSON.parse(stdout) as Record<string, unknown>);
+      } catch {
+        reject(new Error("Whisper returned an invalid transcription response."));
+      }
+    });
+  });
+}
+
 router.post("/transcribe", async (req, res) => {
+  let audioPath = "";
   try {
-    const metadata = await readUploadMetadata(req);
+    const upload = await readUpload(req);
+    const extension = extname(upload.fileName).toLowerCase().replace(/[^a-z0-9.]/g, "") || ".audio";
+    audioPath = join(tmpdir(), `callshield-${randomUUID()}${extension}`);
+    await writeFile(audioPath, upload.fileBytes);
+    const transcription = await runWhisper(audioPath, upload.model);
     const result = TranscribeAudioResponse.parse({
-      transcript: "Audio received. Install the Whisper dependencies in ml_pipeline/ and run the local transcription command to replace demo mode with a real transcript.",
-      language: "en",
-      durationSeconds: 0,
-      model: metadata.model,
-      mode: "demo",
-      segments: [{
-        id: 0,
-        start: 0,
-        end: 0,
-        text: `Uploaded ${metadata.fileName} (${Math.max(0, metadata.byteLength)} bytes).`,
-        confidence: 0,
-      }],
+      transcript: transcription.transcript,
+      language: transcription.language,
+      durationSeconds: transcription.durationSeconds,
+      model: upload.model,
+      mode: "whisper",
+      segments: transcription.segments,
     });
     res.json(result);
   } catch (error) {
     req.log.error({ err: error }, "Audio upload failed");
-    res.status(400).json({ error: error instanceof Error ? error.message : "Invalid audio upload" });
+    const message = error instanceof Error ? error.message : "Invalid audio upload";
+    const status = message.includes("Whisper") || message.includes("No module named") || message.includes("timed out") ? 503 : 400;
+    res.status(status).json({ error: message });
+  } finally {
+    if (audioPath) await rm(audioPath, { force: true }).catch(() => undefined);
   }
 });
 
