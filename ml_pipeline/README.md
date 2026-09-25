@@ -13,6 +13,8 @@ python ml_pipeline/train.py --csv data/calls.csv --output ml_pipeline/artifacts
 
 The CSV requires `text` and `label` columns (`spam` / `not_spam` or `1` / `0`). Training writes `metrics.json` and `callshield.joblib`.
 
+Datasets using `is_spam` instead of `label` are accepted directly. A supplied `is_confidential` column is preserved in the source data but is not used by the spam classifier.
+
 ## Run local audio inference
 
 ```bash

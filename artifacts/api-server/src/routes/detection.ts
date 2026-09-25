@@ -2,7 +2,7 @@ import { Router, type IRouter, type Request } from "express";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
-import { rm, writeFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -70,6 +70,13 @@ function classifyText(input: { text: string; durationSeconds?: number; speechRat
   });
 }
 
+function findWorkspaceFile(...parts: string[]) {
+  return [
+    resolve(process.cwd(), ...parts),
+    resolve(process.cwd(), "..", "..", ...parts),
+  ].find(existsSync);
+}
+
 async function readUpload(req: Request) {
   const contentType = req.headers["content-type"] ?? "";
   const boundaryMatch = contentType.match(/boundary="?([^";]+)"?/i);
@@ -102,10 +109,7 @@ async function readUpload(req: Request) {
 
 function runWhisper(audioPath: string, model: string) {
   return new Promise<Record<string, unknown>>((resolveResult, reject) => {
-    const scriptPath = [
-      resolve(process.cwd(), "ml_pipeline", "transcribe_worker.py"),
-      resolve(process.cwd(), "..", "..", "ml_pipeline", "transcribe_worker.py"),
-    ].find(existsSync);
+    const scriptPath = findWorkspaceFile("ml_pipeline", "transcribe_worker.py");
     if (!scriptPath) {
       reject(new Error("Whisper worker is not installed in ml_pipeline."));
       return;
@@ -141,6 +145,103 @@ function runWhisper(audioPath: string, model: string) {
   });
 }
 
+function runTrainedPrediction(text: string) {
+  return new Promise<{ label: "spam" | "not_spam"; probability: number; model: string }>((resolveResult, reject) => {
+    const scriptPath = findWorkspaceFile("ml_pipeline", "predict_worker.py");
+    const bundlePath = findWorkspaceFile("ml_pipeline", "artifacts", "callshield.joblib");
+    if (!scriptPath || !bundlePath) {
+      reject(new Error("Trained model bundle is not available."));
+      return;
+    }
+    const python = process.env.PYTHON_BIN ?? "python3";
+    const child = spawn(python, [scriptPath, "--bundle", bundlePath], {
+      env: { ...process.env, PYTHONUNBUFFERED: "1" },
+    });
+    let stdout = "";
+    let stderr = "";
+    const timeout = setTimeout(() => {
+      child.kill("SIGTERM");
+      reject(new Error("Trained model prediction timed out."));
+    }, 60_000);
+    child.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
+    child.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
+    child.on("error", (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timeout);
+      if (code !== 0) {
+        reject(new Error(stderr.trim() || `Trained model exited with code ${code ?? "unknown"}.`));
+        return;
+      }
+      try {
+        resolveResult(JSON.parse(stdout) as { label: "spam" | "not_spam"; probability: number; model: string });
+      } catch {
+        reject(new Error("Trained model returned an invalid prediction response."));
+      }
+    });
+    child.stdin.write(JSON.stringify({ text }));
+    child.stdin.end();
+  });
+}
+
+const familyByModel: Record<string, string> = {
+  "Logistic Regression": "linear",
+  "Naive Bayes": "probabilistic",
+  "Support Vector Machine": "margin-based",
+  "Decision Tree": "tree",
+  "Random Forest": "ensemble",
+  "Gradient Boosting": "ensemble",
+  "K-Nearest Neighbors": "instance-based",
+  "MLP Neural Network": "neural",
+};
+
+async function getMetricsPayload() {
+  const metricsPath = findWorkspaceFile("ml_pipeline", "artifacts", "metrics.json");
+  if (!metricsPath) {
+    return {
+      dataset: "Demo metrics",
+      featureSet: "TF-IDF word + engineered call signals",
+      split: "80/20 stratified split · 5-fold CV",
+      trainedAt: "2026-09-25T00:00:00.000Z",
+      recommendedModel: "Support Vector Machine",
+      metrics: modelMetrics,
+    };
+  }
+  const source = JSON.parse(await readFile(metricsPath, "utf8")) as {
+    dataset?: string;
+    feature_set?: string;
+    split?: string;
+    recommended_model?: string;
+    metrics?: Array<Record<string, unknown>>;
+  };
+  return {
+    dataset: source.dataset ?? "Trained call dataset",
+    featureSet: source.feature_set ?? "TF-IDF word + engineered call signals",
+    split: source.split ?? "80/20 stratified split",
+    trainedAt: new Date().toISOString(),
+    recommendedModel: source.recommended_model ?? "Logistic Regression",
+    metrics: (source.metrics ?? []).map((row) => ({
+      model: String(row.model ?? "Unknown"),
+      family: familyByModel[String(row.model)] ?? "ensemble",
+      accuracy: Number(row.accuracy ?? 0),
+      precisionMacro: Number(row.precision_macro ?? 0),
+      recallMacro: Number(row.recall_macro ?? 0),
+      f1Macro: Number(row.f1_macro ?? 0),
+      precisionWeighted: Number(row.precision_weighted ?? 0),
+      recallWeighted: Number(row.recall_weighted ?? 0),
+      f1Weighted: Number(row.f1_weighted ?? 0),
+      rocAuc: Number(row.roc_auc ?? 0),
+      prAuc: Number(row.pr_auc ?? 0),
+      logLoss: Number(row.log_loss ?? 0),
+      trainingTimeMs: Number(row.training_time_ms ?? 0),
+      inferenceLatencyMs: Number(row.inference_latency_ms ?? 0),
+      confusionMatrix: row.confusion_matrix ?? [[0, 0], [0, 0]],
+    })),
+  };
+}
+
 router.post("/transcribe", async (req, res) => {
   let audioPath = "";
   try {
@@ -168,33 +269,43 @@ router.post("/transcribe", async (req, res) => {
   }
 });
 
-router.post("/predict", (req, res) => {
+router.post("/predict", async (req, res) => {
   const parsed = PredictCallBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "A non-empty transcript is required." });
     return;
   }
-  res.json(classifyText(parsed.data));
+  const fallback = classifyText(parsed.data);
+  try {
+    const trained = await runTrainedPrediction(parsed.data.text);
+    const probability = Number(trained.probability.toFixed(3));
+    res.json(PredictCallResponse.parse({
+      label: trained.label,
+      probability,
+      confidence: Number(Math.max(probability, 1 - probability).toFixed(3)),
+      model: trained.model,
+      mode: "trained",
+      signals: fallback.signals,
+      features: fallback.features,
+    }));
+  } catch (error) {
+    req.log.warn({ err: error }, "Using heuristic prediction because trained bundle is unavailable");
+    res.json(fallback);
+  }
 });
 
-router.get("/metrics", (_req, res) => {
-  res.json(GetMetricsResponse.parse({
-    dataset: "SMS Spam Collection + curated call phrases",
-    featureSet: "TF-IDF word + engineered call signals",
-    split: "80/20 stratified split · 5-fold CV",
-    trainedAt: "2026-09-25T00:00:00.000Z",
-    recommendedModel: "Support Vector Machine",
-    metrics: modelMetrics,
-  }));
+router.get("/metrics", async (_req, res) => {
+  res.json(GetMetricsResponse.parse(await getMetricsPayload()));
 });
 
 router.get("/dashboard", (_req, res) => {
+  const trainedModel = findWorkspaceFile("ml_pipeline", "artifacts", "callshield.joblib");
   res.json(GetDashboardResponse.parse({
     callsAnalyzed: 1284,
     spamRate: 0.31,
     avgConfidence: 0.92,
     avgLatencyMs: 2.4,
-    modelStatus: "Demo metrics loaded",
+    modelStatus: trainedModel ? "Trained model loaded" : "Heuristic fallback active",
     topSignal: "OTP or verification request",
   }));
 });

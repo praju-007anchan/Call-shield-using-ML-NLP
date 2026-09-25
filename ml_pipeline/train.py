@@ -1,8 +1,8 @@
 """Train and compare CallShield's eight requested classifiers.
 
-Input CSV must contain `text` and `label` columns. Optional `duration_seconds`
-is used for engineered speech-rate features. Outputs a joblib bundle and JSON
-metrics that the API can serve.
+Input CSV must contain `text` and either `label` or `is_spam` columns. Optional
+`duration_seconds` is used for engineered speech-rate features. Outputs a
+joblib bundle and JSON metrics that the API can serve.
 """
 from __future__ import annotations
 
@@ -53,7 +53,8 @@ def evaluate(name, model, x_train, x_test, y_train, y_test):
     latency_started = time.perf_counter()
     predictions = model.predict(x_test)
     probabilities = model.predict_proba(x_test)[:, 1]
-    latency_ms = (time.perf_counter() - latency_started) * 1000 / max(len(x_test), 1)
+    y_test_binary = (y_test == "spam").astype(int)
+    latency_ms = (time.perf_counter() - latency_started) * 1000 / max(x_test.shape[0], 1)
     return {
         "model": name,
         "accuracy": accuracy_score(y_test, predictions),
@@ -63,9 +64,9 @@ def evaluate(name, model, x_train, x_test, y_train, y_test):
         "precision_weighted": precision_score(y_test, predictions, average="weighted", zero_division=0),
         "recall_weighted": recall_score(y_test, predictions, average="weighted", zero_division=0),
         "f1_weighted": f1_score(y_test, predictions, average="weighted", zero_division=0),
-        "roc_auc": roc_auc_score(y_test, probabilities),
-        "pr_auc": average_precision_score(y_test, probabilities),
-        "log_loss": log_loss(y_test, probabilities),
+        "roc_auc": roc_auc_score(y_test_binary, probabilities),
+        "pr_auc": average_precision_score(y_test_binary, probabilities),
+        "log_loss": log_loss(y_test_binary, probabilities),
         "training_time_ms": training_ms,
         "inference_latency_ms": latency_ms,
         "confusion_matrix": confusion_matrix(y_test, predictions).tolist(),
@@ -80,7 +81,16 @@ def main():
     output = Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
 
-    df = pd.read_csv(args.csv).dropna(subset=["text", "label"])
+    df = pd.read_csv(args.csv)
+    if "label" not in df.columns:
+        if "is_spam" not in df.columns:
+            raise ValueError("CSV must contain a label or is_spam column.")
+        df["label"] = df["is_spam"].map({0: "not_spam", 1: "spam", "0": "not_spam", "1": "spam"})
+    df = df.dropna(subset=["text", "label"])
+    df["label"] = df["label"].map({
+        0: "not_spam", 1: "spam", "0": "not_spam", "1": "spam",
+        "not_spam": "not_spam", "spam": "spam", "ham": "not_spam",
+    }).fillna(df["label"].astype(str))
     df["clean_text"] = df["text"].map(clean_transcript)
     x_train, x_test, y_train, y_test = train_test_split(
         df["clean_text"], df["label"], test_size=0.2, stratify=df["label"], random_state=42
