@@ -11,6 +11,8 @@ export * from './errorResponse';
 export * from './healthStatus';
 export * from './metricsResponse';
 export * from './modelMetric';
+export * from './modelPrediction';
+export * from './modelPredictionLabel';
 export * from './predictionInput';
 export * from './predictionResult';
 export * from './predictionResultFeatures';

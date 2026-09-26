@@ -80,6 +80,26 @@ export const PredictionResultMode = {
 
 export type PredictionResultFeatures = {[key: string]: number};
 
+export type ModelPredictionLabel = typeof ModelPredictionLabel[keyof typeof ModelPredictionLabel];
+
+
+export const ModelPredictionLabel = {
+  spam: 'spam',
+  not_spam: 'not_spam',
+} as const;
+
+export interface ModelPrediction {
+  model: string;
+  label: ModelPredictionLabel;
+  probability: number;
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1: number;
+  selectionScore: number;
+  selectionRank: number;
+}
+
 export interface PredictionResult {
   label: PredictionResultLabel;
   probability: number;
@@ -88,6 +108,8 @@ export interface PredictionResult {
   mode: PredictionResultMode;
   signals: string[];
   features: PredictionResultFeatures;
+  /** Prediction from every trained model, with benchmark metrics from the labeled dataset */
+  modelResults?: ModelPrediction[];
 }
 
 export interface ModelMetric {

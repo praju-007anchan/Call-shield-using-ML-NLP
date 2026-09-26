@@ -65,7 +65,18 @@ export const PredictCallResponse = zod.object({
   "model": zod.string(),
   "mode": zod.enum(['trained', 'heuristic']),
   "signals": zod.array(zod.string()),
-  "features": zod.record(zod.string(), zod.number())
+  "features": zod.record(zod.string(), zod.number()),
+  "modelResults": zod.array(zod.object({
+  "model": zod.string(),
+  "label": zod.enum(['spam', 'not_spam']),
+  "probability": zod.number(),
+  "accuracy": zod.number(),
+  "precision": zod.number(),
+  "recall": zod.number(),
+  "f1": zod.number(),
+  "selectionScore": zod.number(),
+  "selectionRank": zod.number().int()
+})).optional().describe('Prediction from every trained model, with benchmark metrics from the labeled dataset')
 })
 
 

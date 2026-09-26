@@ -195,7 +195,35 @@ components:
           type: object
           additionalProperties:
             type: number
+        modelResults:
+          type: array
+          description: Prediction from every trained model, with benchmark metrics from the labeled dataset
+          items:
+            $ref: "#/components/schemas/ModelPrediction"
       required: [label, probability, confidence, model, mode, signals, features]
+    ModelPrediction:
+      type: object
+      properties:
+        model:
+          type: string
+        label:
+          type: string
+          enum: [spam, not_spam]
+        probability:
+          type: number
+        accuracy:
+          type: number
+        precision:
+          type: number
+        recall:
+          type: number
+        f1:
+          type: number
+        selectionScore:
+          type: number
+        selectionRank:
+          type: integer
+      required: [model, label, probability, accuracy, precision, recall, f1, selectionScore, selectionRank]
     ModelMetric:
       type: object
       properties:

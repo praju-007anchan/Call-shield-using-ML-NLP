@@ -16,8 +16,8 @@
       "roc_auc": 0.9988281250000001,
       "pr_auc": 0.998489010989011,
       "log_loss": 0.042451773376917926,
-      "training_time_ms": 1.0054199999558477,
-      "inference_latency_ms": 0.036071425000727686,
+      "training_time_ms": 1.0047569999187544,
+      "inference_latency_ms": 0.03228621875166482,
       "confusion_matrix": [
         [
           80,
@@ -28,7 +28,7 @@
           79
         ]
       ],
-      "selection_score": 0.993833,
+      "selection_score": 0.99384,
       "selection_rank": 1
     },
     {
@@ -43,8 +43,8 @@
       "roc_auc": 0.9993749999999999,
       "pr_auc": 0.9994047619047619,
       "log_loss": 0.11364326552991581,
-      "training_time_ms": 2.158166999834066,
-      "inference_latency_ms": 0.005464912499064667,
+      "training_time_ms": 2.2289960002126463,
+      "inference_latency_ms": 0.006136287501590232,
       "confusion_matrix": [
         [
           80,
@@ -55,7 +55,7 @@
           79
         ]
       ],
-      "selection_score": 0.993006,
+      "selection_score": 0.992987,
       "selection_rank": 2
     },
     {
@@ -70,8 +70,8 @@
       "roc_auc": 1.0,
       "pr_auc": 1.0,
       "log_loss": 0.24560172240645173,
-      "training_time_ms": 8.843130000059318,
-      "inference_latency_ms": 0.00539939375130416,
+      "training_time_ms": 14.603561000058107,
+      "inference_latency_ms": 0.006482149998987552,
       "confusion_matrix": [
         [
           80,
@@ -82,7 +82,7 @@
           79
         ]
       ],
-      "selection_score": 0.989488,
+      "selection_score": 0.98938,
       "selection_rank": 3
     },
     {
@@ -97,8 +97,8 @@
       "roc_auc": 1.0,
       "pr_auc": 1.0,
       "log_loss": 0.011065152161889625,
-      "training_time_ms": 521.5984839999237,
-      "inference_latency_ms": 0.26151041249988793,
+      "training_time_ms": 544.2001260003053,
+      "inference_latency_ms": 0.3064867874996935,
       "confusion_matrix": [
         [
           80,
@@ -109,7 +109,7 @@
           79
         ]
       ],
-      "selection_score": 0.979452,
+      "selection_score": 0.977147,
       "selection_rank": 4
     },
     {
@@ -124,8 +124,8 @@
       "roc_auc": 1.0,
       "pr_auc": 1.0,
       "log_loss": 0.016787882068389437,
-      "training_time_ms": 1853.2404610000413,
-      "inference_latency_ms": 0.010670399998957691,
+      "training_time_ms": 2027.1274149999954,
+      "inference_latency_ms": 0.012870149998889246,
       "confusion_matrix": [
         [
           80,
@@ -136,7 +136,7 @@
           79
         ]
       ],
-      "selection_score": 0.965565,
+      "selection_score": 0.965469,
       "selection_rank": 5
     },
     {
@@ -151,8 +151,8 @@
       "roc_auc": 0.9975,
       "pr_auc": 0.9974877844881018,
       "log_loss": 0.10364020686233517,
-      "training_time_ms": 567.2921039999892,
-      "inference_latency_ms": 0.018174181249719368,
+      "training_time_ms": 584.8958850001509,
+      "inference_latency_ms": 0.011352362497518698,
       "confusion_matrix": [
         [
           78,
@@ -163,7 +163,7 @@
           74
         ]
       ],
-      "selection_score": 0.954633,
+      "selection_score": 0.955352,
       "selection_rank": 6
     },
     {
@@ -178,8 +178,8 @@
       "roc_auc": 0.99984375,
       "pr_auc": 0.9998456790123457,
       "log_loss": 0.1304144680087181,
-      "training_time_ms": 567.9266140000436,
-      "inference_latency_ms": 0.9659673249998946,
+      "training_time_ms": 511.04497100004664,
+      "inference_latency_ms": 0.8498765249981943,
       "confusion_matrix": [
         [
           80,
@@ -190,7 +190,7 @@
           78
         ]
       ],
-      "selection_score": 0.949393,
+      "selection_score": 0.951023,
       "selection_rank": 7
     },
     {
@@ -205,8 +205,8 @@
       "roc_auc": 0.90625,
       "pr_auc": 0.8791666666666667,
       "log_loss": 3.379092505229733,
-      "training_time_ms": 13.999183999885645,
-      "inference_latency_ms": 0.005494306249431702,
+      "training_time_ms": 15.52262699988205,
+      "inference_latency_ms": 0.005527625000922853,
       "confusion_matrix": [
         [
           75,
@@ -217,7 +217,7 @@
           70
         ]
       ],
-      "selection_score": 0.827825,
+      "selection_score": 0.827823,
       "selection_rank": 8
     }
   ]

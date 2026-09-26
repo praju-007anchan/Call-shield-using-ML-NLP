@@ -149,7 +149,13 @@ def main():
         bundles[name] = fitted
     results = score_models(results)
     best_name = results[0]["model"]
-    joblib.dump({"vectorizer": vectorizer, "model": bundles[best_name], "model_name": best_name}, output / "callshield.joblib")
+    joblib.dump({
+        "vectorizer": vectorizer,
+        "model": bundles[best_name],
+        "model_name": best_name,
+        "models": bundles,
+        "metrics": results,
+    }, output / "callshield.joblib")
     (output / "metrics.json").write_text(json.dumps({
         "dataset": str(args.csv),
         "feature_set": "TF-IDF word + engineered call signals",

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ArrowUpRight, Check, FileAudio, FileText, Info, LoaderCircle, Mic2, Paperclip, RotateCcw, ShieldAlert, Sparkles, UploadCloud } from 'lucide-react';
-import { useGetDashboard, usePredictCall, useTranscribeAudio, type PredictionResult, type TranscriptionResult } from '@workspace/api-client-react';
+import { useGetDashboard, usePredictCall, useTranscribeAudio, type ModelPrediction, type PredictionResult, type TranscriptionResult } from '@workspace/api-client-react';
 
 type SourceMode = 'recording' | 'transcript';
 
@@ -187,9 +187,39 @@ function Results({ prediction, transcript, sourceText, onReset }: { prediction: 
         <div className="flex items-center justify-between border-b border-card-border px-5 py-4"><div><h3 className="font-semibold">Evidence</h3><p className="mt-0.5 text-xs text-muted-foreground">Decision: {isSpam ? 'Spam call' : 'Not a spam call'} · Probability {probability}% · {prediction.signals.length} signals</p></div><button type="button" data-testid="button-new-review" onClick={onReset} className="inline-flex items-center gap-1.5 rounded-md border border-input px-2.5 py-1.5 text-xs font-medium hover:bg-muted"><RotateCcw size={13} /> New review</button></div>
         <div className="grid gap-0 md:grid-cols-2"><div className="border-b border-card-border p-5 md:border-b-0 md:border-r"><h4 className="mb-3 font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground">Signals detected</h4>{prediction.signals.length ? <ul className="space-y-3">{prediction.signals.map((signal, index) => <li key={`${signal}-${index}`} className="flex items-start gap-2 text-sm"><span className="mt-1 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive"><ShieldAlert size={11} /></span><span>{signal}</span></li>)}</ul> : <p className="text-sm text-muted-foreground">No notable signals detected.</p>}</div><div className="p-5"><h4 className="mb-3 font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground">Feature summary</h4>{features.length ? <div className="space-y-2.5">{features.map(([name, value]) => <div key={name} className="flex items-center justify-between gap-3 text-xs"><span className="truncate text-muted-foreground">{name.replaceAll('_', ' ')}</span><span className="font-mono text-foreground">{typeof value === 'number' ? value.toFixed(2) : String(value)}</span></div>)}</div> : <p className="text-sm text-muted-foreground">Feature details are unavailable for this result.</p>}</div></div>
       </div>
+      {prediction.modelResults?.length ? <ModelResultsCard models={prediction.modelResults} selectedModel={prediction.model} /> : null}
       {(transcript || sourceText) && <TranscriptCard transcript={transcript} fallbackText={transcript ? undefined : sourceText} />}
     </div>
   );
+}
+
+function ModelResultsCard({ models, selectedModel }: { models: ModelPrediction[]; selectedModel: string }) {
+  return <div className="overflow-hidden rounded-xl border border-card-border bg-card shadow-[var(--shadow-soft)]">
+    <div className="border-b border-card-border px-5 py-4">
+      <h3 className="font-semibold">All model decisions</h3>
+      <p className="mt-0.5 text-xs text-muted-foreground">Every trained algorithm ran on this transcript. The winner is selected from the labeled-dataset metrics.</p>
+    </div>
+    <div className="divide-y divide-card-border">
+      {models.map((model) => {
+        const isSelected = model.model === selectedModel;
+        const isSpam = model.label === 'spam';
+        return <div key={model.model} className={`grid gap-3 px-5 py-4 md:grid-cols-[1.35fr_.8fr_1fr] md:items-center ${isSelected ? 'bg-primary/[.08]' : ''}`}>
+          <div className="flex items-center gap-2">
+            <span className={`h-1.5 w-1.5 rounded-full ${isSpam ? 'bg-destructive' : 'bg-primary'}`} />
+            <span className="text-sm font-semibold">{model.model}</span>
+            {isSelected && <span className="rounded bg-primary/20 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[.08em] text-foreground">selected</span>}
+          </div>
+          <div className={`font-mono text-xs font-semibold ${isSpam ? 'text-destructive' : 'text-foreground'}`}>{isSpam ? 'SPAM CALL' : 'NOT SPAM'} · {(model.probability * 100).toFixed(1)}%</div>
+          <div className="grid grid-cols-4 gap-2 font-mono text-[10px] text-muted-foreground">
+            <span title="Accuracy">A {(model.accuracy * 100).toFixed(1)}%</span>
+            <span title="Precision">P {(model.precision * 100).toFixed(1)}%</span>
+            <span title="Recall">R {(model.recall * 100).toFixed(1)}%</span>
+            <span title="F1 score">F1 {(model.f1 * 100).toFixed(1)}%</span>
+          </div>
+        </div>;
+      })}
+    </div>
+  </div>;
 }
 
 function TranscriptCard({ transcript, fallbackText }: { transcript: TranscriptionResult | null; fallbackText?: string }) {

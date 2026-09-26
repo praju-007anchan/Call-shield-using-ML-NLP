@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ModelPrediction } from './modelPrediction';
 import type { PredictionResultFeatures } from './predictionResultFeatures';
 import type { PredictionResultLabel } from './predictionResultLabel';
 import type { PredictionResultMode } from './predictionResultMode';
@@ -17,4 +18,6 @@ export interface PredictionResult {
   mode: PredictionResultMode;
   signals: string[];
   features: PredictionResultFeatures;
+  /** Prediction from every trained model, with benchmark metrics from the labeled dataset */
+  modelResults?: ModelPrediction[];
 }

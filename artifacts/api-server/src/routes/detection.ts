@@ -146,7 +146,22 @@ function runWhisper(audioPath: string, model: string) {
 }
 
 function runTrainedPrediction(text: string) {
-  return new Promise<{ label: "spam" | "not_spam"; probability: number; model: string }>((resolveResult, reject) => {
+  return new Promise<{
+    label: "spam" | "not_spam";
+    probability: number;
+    model: string;
+    modelResults: Array<{
+      model: string;
+      label: "spam" | "not_spam";
+      probability: number;
+      accuracy: number;
+      precision: number;
+      recall: number;
+      f1: number;
+      selectionScore: number;
+      selectionRank: number;
+    }>;
+  }>((resolveResult, reject) => {
     const scriptPath = findWorkspaceFile("ml_pipeline", "predict_worker.py");
     const bundlePath = findWorkspaceFile("ml_pipeline", "artifacts", "callshield.joblib");
     if (!scriptPath || !bundlePath) {
@@ -176,7 +191,22 @@ function runTrainedPrediction(text: string) {
         return;
       }
       try {
-        resolveResult(JSON.parse(stdout) as { label: "spam" | "not_spam"; probability: number; model: string });
+        resolveResult(JSON.parse(stdout) as {
+          label: "spam" | "not_spam";
+          probability: number;
+          model: string;
+          modelResults: Array<{
+            model: string;
+            label: "spam" | "not_spam";
+            probability: number;
+            accuracy: number;
+            precision: number;
+            recall: number;
+            f1: number;
+            selectionScore: number;
+            selectionRank: number;
+          }>;
+        });
       } catch {
         reject(new Error("Trained model returned an invalid prediction response."));
       }
@@ -289,6 +319,7 @@ router.post("/predict", async (req, res) => {
       mode: "trained",
       signals: fallback.signals,
       features: fallback.features,
+      modelResults: trained.modelResults,
     }));
   } catch (error) {
     req.log.warn({ err: error }, "Using heuristic prediction because trained bundle is unavailable");
