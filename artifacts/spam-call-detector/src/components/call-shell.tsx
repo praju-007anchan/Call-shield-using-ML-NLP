@@ -1,9 +1,11 @@
 import { Activity, BarChart3, ChevronRight, CircleHelp, ShieldCheck, Wifi } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useGetDashboard, useHealthCheck } from '@workspace/api-client-react';
+import { useReviewSession } from '@/state/review-session';
 
 export function CallShell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { file } = useReviewSession();
   const { data: dashboard, isLoading: dashboardLoading } = useGetDashboard();
   const { data: health } = useHealthCheck();
   const isAnalyze = location === '/';
@@ -49,6 +51,7 @@ export function CallShell({ children }: { children: React.ReactNode }) {
             <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Call intelligence / <span className="text-foreground">{isAnalyze ? 'live review' : 'model bench'}</span></p>
           </div>
           <div className="flex items-center gap-3">
+            {location === '/models' && file && <Link href="/" data-testid="link-loaded-audio" className="hidden rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-[11px] font-medium text-foreground transition hover:bg-primary/20 sm:inline-flex">Audio loaded · Back to Analyze</Link>}
             <div className="hidden text-right sm:block">
               <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">calls reviewed</p>
               <p className="text-sm font-semibold">{dashboardLoading ? '—' : (dashboard?.callsAnalyzed ?? 0).toLocaleString()}</p>

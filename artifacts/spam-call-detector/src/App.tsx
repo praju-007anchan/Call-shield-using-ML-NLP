@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { ReviewSessionProvider } from '@/state/review-session';
 import NotFound from '@/pages/not-found';
 import AnalyzePage from '@/pages/analyze';
 import ModelsPage from '@/pages/models';
@@ -41,9 +42,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <Router />
-        </WouterRouter>
+        <ReviewSessionProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <Router />
+          </WouterRouter>
+        </ReviewSessionProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

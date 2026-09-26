@@ -1,16 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
-import { AlertTriangle, ArrowUpRight, Check, FileAudio, FileText, Info, LoaderCircle, Mic2, Paperclip, RotateCcw, ShieldAlert, Sparkles, UploadCloud } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, ArrowUpRight, Check, FileAudio, FileText, Info, LoaderCircle, Mic2, Paperclip, RotateCcw, ShieldAlert, Sparkles, Trash2, UploadCloud } from 'lucide-react';
 import { useGetDashboard, usePredictCall, useTranscribeAudio, type ModelPrediction, type PredictionResult, type TranscriptionResult } from '@workspace/api-client-react';
-
-type SourceMode = 'recording' | 'transcript';
+import { useReviewSession } from '@/state/review-session';
 
 export default function AnalyzePage() {
-  const [sourceMode, setSourceMode] = useState<SourceMode>('recording');
-  const [file, setFile] = useState<File | null>(null);
+  const { sourceMode, setSourceMode, file, setFile, pastedText, setPastedText, transcript, setTranscript, prediction, setPrediction, clearReview } = useReviewSession();
   const [isRecording, setIsRecording] = useState(false);
-  const [pastedText, setPastedText] = useState('');
-  const [transcript, setTranscript] = useState<TranscriptionResult | null>(null);
-  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [error, setError] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -47,14 +42,18 @@ export default function AnalyzePage() {
   };
 
   const reset = () => {
-    if (recorderRef.current) recorderRef.current.stop();
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
     setIsRecording(false);
-    setFile(null);
-    setPastedText('');
+    clearReview();
+    setError('');
+    if (fileInput.current) fileInput.current.value = '';
+  };
+
+  const handleFile = (nextFile: File | null) => {
+    setFile(nextFile);
     setTranscript(null);
     setPrediction(null);
     setError('');
-    if (fileInput.current) fileInput.current.value = '';
   };
 
   const startRecording = async () => {
@@ -72,7 +71,7 @@ export default function AnalyzePage() {
       recorder.onstop = () => {
         stream.getTracks().forEach((track) => track.stop());
         const recording = new Blob(recordingChunks.current, { type: recorder.mimeType || 'audio/webm' });
-        setFile(new File([recording], `call-recording-${new Date().toISOString().slice(11, 19).replaceAll(':', '-')}.webm`, { type: recording.type }));
+        handleFile(new File([recording], `call-recording-${new Date().toISOString().slice(11, 19).replaceAll(':', '-')}.webm`, { type: recording.type }));
         setIsRecording(false);
       };
       recorderRef.current = recorder;
@@ -113,15 +112,15 @@ export default function AnalyzePage() {
                 <button type="button" data-testid="button-mode-transcript" onClick={() => setSourceMode('transcript')} className={`ml-5 border-b-2 px-1 pb-3 text-xs font-medium ${sourceMode === 'transcript' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'}`}><FileText size={14} className="mr-2 inline" />Transcript</button>
               </div>
               <div className="p-5">
-                {sourceMode === 'recording' ? <RecordingInput file={file} fileInput={fileInput} isRecording={isRecording} onFile={setFile} onStartRecording={startRecording} onStopRecording={stopRecording} /> : (
+                {sourceMode === 'recording' ? <RecordingInput file={file} fileInput={fileInput} isRecording={isRecording} onFile={handleFile} onRemove={reset} onStartRecording={startRecording} onStopRecording={stopRecording} /> : (
                   <div>
                     <label htmlFor="transcript-input" className="mb-2 block text-xs font-medium">Paste call transcript</label>
                     <textarea id="transcript-input" data-testid="input-transcript" value={pastedText} onChange={(event) => setPastedText(event.target.value)} placeholder="Paste the conversation here…" className="min-h-[194px] w-full resize-y rounded-lg border border-input bg-background px-3.5 py-3 text-sm leading-6 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20" />
                     <p className="mt-2 text-right font-mono text-[10px] text-muted-foreground">{pastedText.length.toLocaleString()} characters</p>
                   </div>
                 )}
-                <div className="mt-5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Sparkles size={14} className="text-accent" /> Model: <span className="font-mono">small</span></div>
+                 <div className="mt-5 flex items-center justify-between gap-4">
+                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><Sparkles size={14} className="text-accent" /> Transcription: <span className="font-mono">Faster-Whisper · small</span></div>
                   <button type="button" disabled={!canAnalyze || isWorking} data-testid="button-analyze" onClick={analyze} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40">
                     {isWorking ? <><LoaderCircle size={16} className="animate-spin" /> {transcribe.isPending ? 'Transcribing' : 'Scoring'}</> : <>Analyze <ArrowUpRight size={16} /></>}
                   </button>
@@ -141,14 +140,23 @@ export default function AnalyzePage() {
   );
 }
 
-function RecordingInput({ file, fileInput, isRecording, onFile, onStartRecording, onStopRecording }: { file: File | null; fileInput: React.RefObject<HTMLInputElement | null>; isRecording: boolean; onFile: (file: File | null) => void; onStartRecording: () => void; onStopRecording: () => void }) {
+function RecordingInput({ file, fileInput, isRecording, onFile, onRemove, onStartRecording, onStopRecording }: { file: File | null; fileInput: React.RefObject<HTMLInputElement | null>; isRecording: boolean; onFile: (file: File | null) => void; onRemove: () => void; onStartRecording: () => void; onStopRecording: () => void }) {
   const [isDragging, setIsDragging] = useState(false);
-  const audioUrl = useMemo(() => file ? URL.createObjectURL(file) : '', [file]);
+  const [audioUrl, setAudioUrl] = useState('');
+  useEffect(() => {
+    if (!file) {
+      setAudioUrl('');
+      return;
+    }
+    const nextUrl = URL.createObjectURL(file);
+    setAudioUrl(nextUrl);
+    return () => URL.revokeObjectURL(nextUrl);
+  }, [file]);
   return (
     <div>
       <input ref={fileInput} type="file" accept="audio/*" className="hidden" data-testid="input-audio-file" onChange={(event) => onFile(event.target.files?.[0] ?? null)} />
       <div onDragOver={(event) => { event.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={(event) => { event.preventDefault(); setIsDragging(false); onFile(event.dataTransfer.files?.[0] ?? null); }} className={`flex min-h-[194px] w-full flex-col items-center justify-center rounded-lg border border-dashed bg-background px-5 text-center transition ${isDragging ? 'border-accent bg-accent/[.08]' : 'border-input hover:border-accent hover:bg-accent/[.03]'}`}>
-        {file ? <><span className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-primary/20 text-accent"><Check size={21} /></span><span className="max-w-full truncate text-sm font-medium">{file.name}</span><span className="mt-1 font-mono text-[10px] text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB · ready to review</span><div className="mt-3 flex h-8 items-end gap-1" aria-label="Audio waveform preview">{[18, 27, 12, 30, 20, 34, 15, 25, 18, 29, 11, 23, 31, 15, 26, 19, 32, 14].map((height, index) => <span key={index} className="w-1 rounded-full bg-accent/70" style={{ height }} />)}</div>{audioUrl && <audio className="mt-3 h-7 w-full max-w-[260px]" controls src={audioUrl} />}</> : <><span className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-secondary text-accent transition group-hover:scale-105"><UploadCloud size={21} /></span><button type="button" data-testid="button-upload-recording" onClick={() => fileInput.current?.click()} className="text-sm font-medium hover:text-accent">Drop a recording here or browse</button><span className="mt-1 text-xs text-muted-foreground">WAV, MP3, M4A, or a browser recording</span></>}
+        {file ? <><span className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-primary/20 text-accent"><Check size={21} /></span><span className="max-w-full truncate text-sm font-medium">{file.name}</span><span className="mt-1 font-mono text-[10px] text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB · ready to review</span><div className="mt-3 flex h-8 items-end gap-1" aria-label="Audio waveform preview">{[18, 27, 12, 30, 20, 34, 15, 25, 18, 29, 11, 23, 31, 15, 26, 19, 32, 14].map((height, index) => <span key={index} className="w-1 rounded-full bg-accent/70" style={{ height }} />)}</div>{audioUrl && <audio className="mt-3 h-7 w-full max-w-[260px]" controls src={audioUrl} />}<button type="button" data-testid="button-remove-audio" onClick={onRemove} className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-destructive/30 px-2.5 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/5"><Trash2 size={13} /> Remove audio</button></> : <><span className="mb-3 grid h-11 w-11 place-items-center rounded-full bg-secondary text-accent transition group-hover:scale-105"><UploadCloud size={21} /></span><button type="button" data-testid="button-upload-recording" onClick={() => fileInput.current?.click()} className="text-sm font-medium hover:text-accent">Drop a recording here or browse</button><span className="mt-1 text-xs text-muted-foreground">WAV, MP3, M4A, or a browser recording</span></>}
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
         <span className="font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground">{isRecording ? 'recording live' : 'microphone input'}</span>
