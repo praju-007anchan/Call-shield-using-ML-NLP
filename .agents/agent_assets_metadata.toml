@@ -1,0 +1,30 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "XV6G2pTxY83YHkDmwETH8"
+uri = "file://attached_assets/generated_audio/callshield_spam_call.mp3"
+type = "audio"
+title = "CallShield test — Spam call"
+description = "Synthetic urgent bank-security message for testing the spam-call classifier."
+logical_id = "c484bbf5-68bc-496a-9704-dbe9f31b5c35"
+content_hash = "sha256:8ebd6f69be0df3c79f5dd8cd3ad8346fbad5fc501cf83dd99ab1a537491438a0"
+size = 239534
+mtime_ms = 1790406451908
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:90a34be1-7ec0-4394-a4be-464d62ec89ac/c484bbf5-68bc-496a-9704-dbe9f31b5c35/507390fa-dbe4-4199-aa01-6f5a8dfeaae2"
+storage_version_token = "1790406458057151"
+content_type = "audio/mpeg"
+
+[[outputs]]
+id = "1LRCjIGFhX8C1cokR8-zD"
+uri = "file://attached_assets/generated_audio/callshield_not_spam_call.mp3"
+type = "audio"
+title = "CallShield test — Not spam call"
+description = "Synthetic routine clinic appointment reminder for testing the not-spam classifier."
+logical_id = "6d6b580a-0ba4-4e93-960d-246fbe027dbb"
+content_hash = "sha256:3cadc422b149110fe035910872e1e650bdad78bedee88d51f00df1e2d7c087d5"
+size = 253327
+mtime_ms = 1790406452268
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:90a34be1-7ec0-4394-a4be-464d62ec89ac/6d6b580a-0ba4-4e93-960d-246fbe027dbb/4ac89e66-1e20-4f8d-bc4f-f433fa079bf6"
+storage_version_token = "1790406459345862"
+content_type = "audio/mpeg"
