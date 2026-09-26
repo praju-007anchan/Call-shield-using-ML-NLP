@@ -237,6 +237,8 @@ async function getMetricsPayload() {
       logLoss: Number(row.log_loss ?? 0),
       trainingTimeMs: Number(row.training_time_ms ?? 0),
       inferenceLatencyMs: Number(row.inference_latency_ms ?? 0),
+      selectionScore: Number(row.selection_score ?? 0),
+      selectionRank: Number(row.selection_rank ?? 0),
       confusionMatrix: row.confusion_matrix ?? [[0, 0], [0, 0]],
     })),
   };

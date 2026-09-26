@@ -105,6 +105,10 @@ export interface ModelMetric {
   logLoss: number;
   trainingTimeMs: number;
   inferenceLatencyMs: number;
+  /** Composite score used to rank all evaluated models for deployment */
+  selectionScore?: number;
+  /** Rank produced by the metric-led model selection */
+  selectionRank?: number;
   confusionMatrix: number[][];
 }
 

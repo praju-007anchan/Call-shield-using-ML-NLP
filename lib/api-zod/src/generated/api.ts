@@ -93,6 +93,8 @@ export const GetMetricsResponse = zod.object({
   "logLoss": zod.number(),
   "trainingTimeMs": zod.number(),
   "inferenceLatencyMs": zod.number(),
+  "selectionScore": zod.number().optional().describe('Composite score used to rank all evaluated models for deployment'),
+  "selectionRank": zod.number().int().optional().describe('Rank produced by the metric-led model selection'),
   "confusionMatrix": zod.array(zod.array(zod.number().int()))
 }))
 })

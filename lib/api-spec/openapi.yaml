@@ -227,6 +227,12 @@ components:
           type: number
         inferenceLatencyMs:
           type: number
+        selectionScore:
+          type: number
+          description: Composite score used to rank all evaluated models for deployment
+        selectionRank:
+          type: integer
+          description: Rank produced by the metric-led model selection
         confusionMatrix:
           type: array
           items:

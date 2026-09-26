@@ -73,6 +73,49 @@ def evaluate(name, model, x_train, x_test, y_train, y_test):
     }, model
 
 
+def score_models(results):
+    """Select a model using every deployment-relevant metric we record."""
+    quality_keys = [
+        "accuracy",
+        "precision_macro",
+        "recall_macro",
+        "f1_macro",
+        "precision_weighted",
+        "recall_weighted",
+        "f1_weighted",
+        "roc_auc",
+        "pr_auc",
+    ]
+
+    def normalized(values, value, higher_is_better=True):
+        minimum, maximum = min(values), max(values)
+        if maximum == minimum:
+            return 1.0
+        score = (value - minimum) / (maximum - minimum)
+        return score if higher_is_better else 1.0 - score
+
+    log_losses = [row["log_loss"] for row in results]
+    training_times = [row["training_time_ms"] for row in results]
+    inference_latencies = [row["inference_latency_ms"] for row in results]
+    for row in results:
+        quality_score = sum(row[key] for key in quality_keys) / len(quality_keys)
+        calibration_score = normalized(log_losses, row["log_loss"], higher_is_better=False)
+        training_score = normalized(training_times, row["training_time_ms"], higher_is_better=False)
+        latency_score = normalized(inference_latencies, row["inference_latency_ms"], higher_is_better=False)
+        row["selection_score"] = round(
+            quality_score * 0.85
+            + calibration_score * 0.09
+            + training_score * 0.03
+            + latency_score * 0.03,
+            6,
+        )
+
+    results.sort(key=lambda row: row["selection_score"], reverse=True)
+    for rank, row in enumerate(results, start=1):
+        row["selection_rank"] = rank
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", required=True, help="CSV with text,label[,duration_seconds]")
@@ -104,7 +147,7 @@ def main():
         result, fitted = evaluate(name, model, x_train_vec, x_test_vec, y_train, y_test)
         results.append(result)
         bundles[name] = fitted
-    results.sort(key=lambda row: (row["f1_macro"], row["roc_auc"]), reverse=True)
+    results = score_models(results)
     best_name = results[0]["model"]
     joblib.dump({"vectorizer": vectorizer, "model": bundles[best_name], "model_name": best_name}, output / "callshield.joblib")
     (output / "metrics.json").write_text(json.dumps({

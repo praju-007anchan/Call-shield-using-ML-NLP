@@ -2,10 +2,10 @@
   "dataset": "attached_assets/dataset_1790343886829.csv",
   "feature_set": "TF-IDF word + engineered call signals",
   "split": "80/20 stratified split",
-  "recommended_model": "Logistic Regression",
+  "recommended_model": "K-Nearest Neighbors",
   "metrics": [
     {
-      "model": "Logistic Regression",
+      "model": "K-Nearest Neighbors",
       "accuracy": 0.99375,
       "precision_macro": 0.9938271604938271,
       "recall_macro": 0.99375,
@@ -13,11 +13,11 @@
       "precision_weighted": 0.9938271604938272,
       "recall_weighted": 0.99375,
       "f1_weighted": 0.9937497558498378,
-      "roc_auc": 1.0,
-      "pr_auc": 1.0,
-      "log_loss": 0.24560172240645173,
-      "training_time_ms": 10.261412000090786,
-      "inference_latency_ms": 0.004764262499179495,
+      "roc_auc": 0.9988281250000001,
+      "pr_auc": 0.998489010989011,
+      "log_loss": 0.042451773376917926,
+      "training_time_ms": 1.0054199999558477,
+      "inference_latency_ms": 0.036071425000727686,
       "confusion_matrix": [
         [
           80,
@@ -27,57 +27,9 @@
           1,
           79
         ]
-      ]
-    },
-    {
-      "model": "Support Vector Machine",
-      "accuracy": 0.99375,
-      "precision_macro": 0.9938271604938271,
-      "recall_macro": 0.99375,
-      "f1_macro": 0.9937497558498378,
-      "precision_weighted": 0.9938271604938272,
-      "recall_weighted": 0.99375,
-      "f1_weighted": 0.9937497558498378,
-      "roc_auc": 1.0,
-      "pr_auc": 1.0,
-      "log_loss": 0.011065152161889625,
-      "training_time_ms": 524.6585380000397,
-      "inference_latency_ms": 0.262239581249446,
-      "confusion_matrix": [
-        [
-          80,
-          0
-        ],
-        [
-          1,
-          79
-        ]
-      ]
-    },
-    {
-      "model": "MLP Neural Network",
-      "accuracy": 0.99375,
-      "precision_macro": 0.9938271604938271,
-      "recall_macro": 0.99375,
-      "f1_macro": 0.9937497558498378,
-      "precision_weighted": 0.9938271604938272,
-      "recall_weighted": 0.99375,
-      "f1_weighted": 0.9937497558498378,
-      "roc_auc": 1.0,
-      "pr_auc": 1.0,
-      "log_loss": 0.016787882068389437,
-      "training_time_ms": 1953.1774300000961,
-      "inference_latency_ms": 0.01246130000112089,
-      "confusion_matrix": [
-        [
-          80,
-          0
-        ],
-        [
-          1,
-          79
-        ]
-      ]
+      ],
+      "selection_score": 0.993833,
+      "selection_rank": 1
     },
     {
       "model": "Naive Bayes",
@@ -91,8 +43,8 @@
       "roc_auc": 0.9993749999999999,
       "pr_auc": 0.9994047619047619,
       "log_loss": 0.11364326552991581,
-      "training_time_ms": 2.095401000133279,
-      "inference_latency_ms": 0.005354881250241306,
+      "training_time_ms": 2.158166999834066,
+      "inference_latency_ms": 0.005464912499064667,
       "confusion_matrix": [
         [
           80,
@@ -102,10 +54,12 @@
           1,
           79
         ]
-      ]
+      ],
+      "selection_score": 0.993006,
+      "selection_rank": 2
     },
     {
-      "model": "K-Nearest Neighbors",
+      "model": "Logistic Regression",
       "accuracy": 0.99375,
       "precision_macro": 0.9938271604938271,
       "recall_macro": 0.99375,
@@ -113,11 +67,11 @@
       "precision_weighted": 0.9938271604938272,
       "recall_weighted": 0.99375,
       "f1_weighted": 0.9937497558498378,
-      "roc_auc": 0.9988281250000001,
-      "pr_auc": 0.998489010989011,
-      "log_loss": 0.042451773376917926,
-      "training_time_ms": 0.9527009999601432,
-      "inference_latency_ms": 0.05900034374946017,
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "log_loss": 0.24560172240645173,
+      "training_time_ms": 8.843130000059318,
+      "inference_latency_ms": 0.00539939375130416,
       "confusion_matrix": [
         [
           80,
@@ -127,32 +81,63 @@
           1,
           79
         ]
-      ]
+      ],
+      "selection_score": 0.989488,
+      "selection_rank": 3
     },
     {
-      "model": "Random Forest",
-      "accuracy": 0.9875,
-      "precision_macro": 0.9878048780487805,
-      "recall_macro": 0.9875,
-      "f1_macro": 0.9874980465697765,
-      "precision_weighted": 0.9878048780487806,
-      "recall_weighted": 0.9875,
-      "f1_weighted": 0.9874980465697766,
-      "roc_auc": 0.99984375,
-      "pr_auc": 0.9998456790123457,
-      "log_loss": 0.1304144680087181,
-      "training_time_ms": 505.67693799985136,
-      "inference_latency_ms": 0.9917140937503177,
+      "model": "Support Vector Machine",
+      "accuracy": 0.99375,
+      "precision_macro": 0.9938271604938271,
+      "recall_macro": 0.99375,
+      "f1_macro": 0.9937497558498378,
+      "precision_weighted": 0.9938271604938272,
+      "recall_weighted": 0.99375,
+      "f1_weighted": 0.9937497558498378,
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "log_loss": 0.011065152161889625,
+      "training_time_ms": 521.5984839999237,
+      "inference_latency_ms": 0.26151041249988793,
       "confusion_matrix": [
         [
           80,
           0
         ],
         [
-          2,
-          78
+          1,
+          79
         ]
-      ]
+      ],
+      "selection_score": 0.979452,
+      "selection_rank": 4
+    },
+    {
+      "model": "MLP Neural Network",
+      "accuracy": 0.99375,
+      "precision_macro": 0.9938271604938271,
+      "recall_macro": 0.99375,
+      "f1_macro": 0.9937497558498378,
+      "precision_weighted": 0.9938271604938272,
+      "recall_weighted": 0.99375,
+      "f1_weighted": 0.9937497558498378,
+      "roc_auc": 1.0,
+      "pr_auc": 1.0,
+      "log_loss": 0.016787882068389437,
+      "training_time_ms": 1853.2404610000413,
+      "inference_latency_ms": 0.010670399998957691,
+      "confusion_matrix": [
+        [
+          80,
+          0
+        ],
+        [
+          1,
+          79
+        ]
+      ],
+      "selection_score": 0.965565,
+      "selection_rank": 5
     },
     {
       "model": "Gradient Boosting",
@@ -166,8 +151,8 @@
       "roc_auc": 0.9975,
       "pr_auc": 0.9974877844881018,
       "log_loss": 0.10364020686233517,
-      "training_time_ms": 589.6440900000925,
-      "inference_latency_ms": 0.011269281249326468,
+      "training_time_ms": 567.2921039999892,
+      "inference_latency_ms": 0.018174181249719368,
       "confusion_matrix": [
         [
           78,
@@ -177,7 +162,36 @@
           6,
           74
         ]
-      ]
+      ],
+      "selection_score": 0.954633,
+      "selection_rank": 6
+    },
+    {
+      "model": "Random Forest",
+      "accuracy": 0.9875,
+      "precision_macro": 0.9878048780487805,
+      "recall_macro": 0.9875,
+      "f1_macro": 0.9874980465697765,
+      "precision_weighted": 0.9878048780487806,
+      "recall_weighted": 0.9875,
+      "f1_weighted": 0.9874980465697766,
+      "roc_auc": 0.99984375,
+      "pr_auc": 0.9998456790123457,
+      "log_loss": 0.1304144680087181,
+      "training_time_ms": 567.9266140000436,
+      "inference_latency_ms": 0.9659673249998946,
+      "confusion_matrix": [
+        [
+          80,
+          0
+        ],
+        [
+          2,
+          78
+        ]
+      ],
+      "selection_score": 0.949393,
+      "selection_rank": 7
     },
     {
       "model": "Decision Tree",
@@ -191,8 +205,8 @@
       "roc_auc": 0.90625,
       "pr_auc": 0.8791666666666667,
       "log_loss": 3.379092505229733,
-      "training_time_ms": 14.63439400004063,
-      "inference_latency_ms": 0.0056355062497459585,
+      "training_time_ms": 13.999183999885645,
+      "inference_latency_ms": 0.005494306249431702,
       "confusion_matrix": [
         [
           75,
@@ -202,7 +216,9 @@
           10,
           70
         ]
-      ]
+      ],
+      "selection_score": 0.827825,
+      "selection_rank": 8
     }
   ]
 }
