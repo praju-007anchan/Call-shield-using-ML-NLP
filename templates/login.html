@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CallShield - Secure Analyst Sign In</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23c4f122%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z%22/><path d=%22m9 12 2 2 4-4%22/></svg>">
+</head>
+<body class="auth-page-body">
+  <!-- Ambient Cybersecurity Glow Background -->
+  <div class="auth-ambient-glow auth-glow-1"></div>
+  <div class="auth-ambient-glow auth-glow-2"></div>
+  <div class="auth-grid-overlay"></div>
+
+  <div class="auth-container">
+    <!-- Top Security Status Bar -->
+    <div class="auth-security-badge">
+      <span class="auth-status-dot"></span>
+      <span class="mono">SYSTEM ACTIVE · SPEECH NLP ENGINE · 98.8% TEST ACC</span>
+    </div>
+
+    <!-- Main Auth Card -->
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-brand-logo">
+          <svg class="auth-shield-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h1 class="auth-title">CallShield</h1>
+        <p class="auth-subtitle">Real-Time Spam and Fraud Call Detection Console</p>
+      </div>
+
+      {% if error %}
+      <div class="alert-box error" role="alert" style="margin-bottom: 20px;">
+        <svg class="alert-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div>
+          <div style="font-weight: 600;">{{ error }}</div>
+          <div style="margin-top: 4px; font-size: 11px;">
+            <a href="/register" style="color: var(--danger-text); font-weight: 700; text-decoration: underline;">Need a new analyst account? Register here →</a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if message %}
+      <div class="alert-box info" role="status" style="margin-bottom: 20px;">
+        <svg class="alert-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+        </svg>
+        <div>{{ message }}</div>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="/login{% if request.args.get('next') %}?next={{ request.args.get('next') }}{% endif %}" class="auth-form" id="login-form">
+        <!-- Username Field -->
+        <div class="form-group">
+          <label for="username" class="form-label">Analyst Identifier / Username</label>
+          <div class="input-with-icon">
+            <svg class="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input 
+              type="text" 
+              id="username" 
+              name="username" 
+              class="form-input mono" 
+              placeholder="e.g. admin or analyst" 
+              required 
+              autocomplete="username"
+              autofocus
+            >
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="password" class="form-label">Access Password</label>
+            <a href="/forgot-password" class="forgot-link">Forgot Password?</a>
+          </div>
+          <div class="input-with-icon">
+            <svg class="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              class="form-input mono" 
+              placeholder="••••••••••••" 
+              required 
+              autocomplete="current-password"
+              style="padding-right: 44px;"
+            >
+            <button 
+              type="button" 
+              class="btn-toggle-password" 
+              id="toggle-pwd-btn"
+              onclick="togglePasswordVisibility('password', this)" 
+              title="Toggle Password Visibility" 
+              aria-label="Toggle password visibility"
+              tabindex="-1"
+            >
+              <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 17px; height: 17px;">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me Checkbox -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: -2px;">
+          <label class="remember-checkbox-label">
+            <input type="checkbox" name="remember" id="rememberMe" checked class="custom-checkbox">
+            <span>Keep session active on this workstation</span>
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-auth-submit" id="login-btn">
+          <span class="btn-spinner hidden" id="login-spinner"></span>
+          <span id="login-btn-text">Authenticate & Open Workspace</span>
+          <svg class="btn-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+
+        <!-- Secondary Register Link -->
+        <div class="auth-footer-text">
+          <span>New analyst?</span>
+          <a href="/register" class="auth-accent-link">Create Station Account</a>
+        </div>
+
+        <!-- Review / Demonstration Access Box -->
+        <div class="demo-eval-box">
+          <div class="demo-eval-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--primary);">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>Review & Evaluation Access</span>
+          </div>
+          <div class="demo-eval-credentials mono">
+            <span>Username: <strong>admin</strong></span>
+            <span class="demo-divider">|</span>
+            <span>Password: <strong>admin123</strong></span>
+          </div>
+          <button type="button" id="quickFillBtn" class="btn-quick-autofill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px;">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+            </svg>
+            <span>One-Click Autofill Admin Credentials</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Security Disclaimers / Standards Strip -->
+    <div class="auth-trust-strip">
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>End-to-End Local Inference</span>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Zero External Leakage</span>
+      </div>
+      <div class="trust-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+        <span>Sub-Millisecond Scoring</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePasswordVisibility(fieldId, btn) {
+      const field = document.getElementById(fieldId);
+      if (!field) return;
+      
+      const eyeIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 17px; height: 17px;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+      const eyeOffIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 17px; height: 17px;"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
+
+      if (field.type === 'password') {
+        field.type = 'text';
+        btn.innerHTML = eyeOffIcon;
+        btn.setAttribute('title', 'Hide Password');
+      } else {
+        field.type = 'password';
+        btn.innerHTML = eyeIcon;
+        btn.setAttribute('title', 'Show Password');
+      }
+    }
+
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const rememberCheckbox = document.getElementById('rememberMe');
+    const quickFillBtn = document.getElementById('quickFillBtn');
+    const loginForm = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const loginSpinner = document.getElementById('login-spinner');
+    const loginBtnText = document.getElementById('login-btn-text');
+
+    // Auto-fill remembered username from localStorage
+    try {
+      const savedUser = localStorage.getItem('callshield_saved_user');
+      if (savedUser && !usernameInput.value) {
+        usernameInput.value = savedUser;
+        passwordInput.focus();
+      }
+    } catch (e) {
+      console.log('localStorage unavailable', e);
+    }
+
+    // Save or clear remembered username
+    loginForm.addEventListener('submit', function() {
+      try {
+        if (rememberCheckbox.checked && usernameInput.value) {
+          localStorage.setItem('callshield_saved_user', usernameInput.value.trim());
+        } else if (!rememberCheckbox.checked) {
+          localStorage.removeItem('callshield_saved_user');
+        }
+      } catch (e) {}
+
+      // Loading state on button
+      if (loginBtn && loginSpinner && loginBtnText) {
+        loginSpinner.classList.remove('hidden');
+        loginBtnText.textContent = 'Authenticating...';
+        loginBtn.style.opacity = '0.85';
+        loginBtn.style.pointerEvents = 'none';
+      }
+    });
+
+    // Quick fill demo button with visual feedback
+    if (quickFillBtn) {
+      quickFillBtn.addEventListener('click', function() {
+        usernameInput.value = 'admin';
+        passwordInput.value = 'admin123';
+        passwordInput.focus();
+        
+        const originalText = quickFillBtn.innerHTML;
+        quickFillBtn.style.borderColor = 'var(--primary)';
+        quickFillBtn.style.color = 'var(--primary)';
+        quickFillBtn.innerHTML = `<span>✓ Credentials Loaded</span>`;
+        setTimeout(() => {
+          quickFillBtn.innerHTML = originalText;
+          quickFillBtn.style.borderColor = '';
+          quickFillBtn.style.color = '';
+        }, 1200);
+      });
+    }
+  </script>
+</body>
+</html>

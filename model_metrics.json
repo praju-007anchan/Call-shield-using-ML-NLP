@@ -1,0 +1,137 @@
+{
+  "dataset_name": "dataset.csv",
+  "total_records": 800,
+  "target_variable": "spam_target",
+  "labels_meaning": {
+    "0,0": "Legitimate / Not Spam",
+    "1,0": "Spam, but not necessarily Fraud",
+    "1,1": "Spam + Fraud"
+  },
+  "eda_summary": {
+    "not_spam_count": 400,
+    "spam_count": 400,
+    "combination_counts": {
+      "0,0": 396,
+      "1,0": 221,
+      "1,1": 179,
+      "0,1": 4
+    },
+    "spam_composition": {
+      "non_fraud_count": 221,
+      "fraud_count": 179,
+      "non_fraud_pct": 55.25,
+      "fraud_pct": 44.75
+    }
+  },
+  "target_leakage_note": "The 'fraud' column is strictly excluded from input features to avoid target leakage. All models rely solely on NLP signals from the spoken call transcript.",
+  "split": "80% Train / 20% Test (Stratified on spam_target)",
+  "features": "TF-IDF (1-2 ngrams, min_df=2) + Chi2 SelectKBest (k=1500)",
+  "recommended_model": "Logistic Regression",
+  "tuning_info": {
+    "best_params": {
+      "C": 10,
+      "penalty": "l2",
+      "solver": "lbfgs"
+    },
+    "best_cv_f1": 0.9906,
+    "test_accuracy": 0.9875,
+    "test_f1": 0.9875
+  },
+  "metrics": [
+    {
+      "model": "Logistic Regression",
+      "accuracy": 0.9875,
+      "precision": 0.9875,
+      "recall": 0.9875,
+      "f1_score": 0.9875,
+      "roc_auc": 0.9998,
+      "confusion_matrix": [
+        [
+          79,
+          1
+        ],
+        [
+          1,
+          79
+        ]
+      ],
+      "rank": 1
+    },
+    {
+      "model": "Naive Bayes",
+      "accuracy": 0.9875,
+      "precision": 0.9875,
+      "recall": 0.9875,
+      "f1_score": 0.9875,
+      "roc_auc": 0.9992,
+      "confusion_matrix": [
+        [
+          79,
+          1
+        ],
+        [
+          1,
+          79
+        ]
+      ],
+      "rank": 2
+    },
+    {
+      "model": "Support Vector Machine",
+      "accuracy": 0.9875,
+      "precision": 0.9875,
+      "recall": 0.9875,
+      "f1_score": 0.9875,
+      "roc_auc": 0.9998,
+      "confusion_matrix": [
+        [
+          79,
+          1
+        ],
+        [
+          1,
+          79
+        ]
+      ],
+      "rank": 3
+    },
+    {
+      "model": "Random Forest",
+      "accuracy": 0.975,
+      "precision": 0.9872,
+      "recall": 0.9625,
+      "f1_score": 0.9747,
+      "roc_auc": 0.9995,
+      "confusion_matrix": [
+        [
+          79,
+          1
+        ],
+        [
+          3,
+          77
+        ]
+      ],
+      "rank": 4
+    },
+    {
+      "model": "K-Nearest Neighbors",
+      "accuracy": 0.925,
+      "precision": 1.0,
+      "recall": 0.85,
+      "f1_score": 0.9189,
+      "roc_auc": 0.9856,
+      "confusion_matrix": [
+        [
+          80,
+          0
+        ],
+        [
+          12,
+          68
+        ]
+      ],
+      "rank": 5
+    }
+  ]
+}

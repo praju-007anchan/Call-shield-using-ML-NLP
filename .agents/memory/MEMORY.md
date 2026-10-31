@@ -1,1 +1,0 @@
-- [OpenAPI browser types](api-codegen-browser-types.md) — multipart request schemas make generated shared types depend on DOM and DOM iterable libraries.

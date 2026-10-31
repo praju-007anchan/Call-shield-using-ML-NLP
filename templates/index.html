@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CallShield - Real-Time Spam and Fraud Call Detection</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23c4f122%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z%22/><path d=%22m9 12 2 2 4-4%22/></svg>">
+</head>
+<body class="signal-grid">
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-section">
+        <a href="/" class="brand-logo">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <span class="brand-name">CallShield</span>
+        </a>
+        <div class="brand-tagline">Review Workspace</div>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="/" class="nav-item active" id="nav-analyze">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span>Analyze Call</span>
+        </a>
+        <a href="/models" class="nav-item" id="nav-models">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>Model Bench</span>
+        </a>
+        {% if session.get('username') == 'admin' %}
+        <a href="/admin" class="nav-item" id="nav-admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/></svg>
+          <span>Admin Console</span>
+        </a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-footer">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 8px 10px; background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); border: 1px solid var(--border-sidebar);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--accent);">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span class="mono" style="font-size: 12px; color: var(--text-sidebar);">{{ session.get('username', 'Analyst') }}</span>
+          </div>
+          <a href="/logout" style="color: var(--primary); font-size: 11px; text-decoration: none; font-weight: 600;" title="Sign Out">Logout</a>
+        </div>
+        <div class="system-status">
+          <span>System Status</span>
+          <span class="status-dot"></span>
+        </div>
+        <div class="status-badge">
+          <span>OpenAI Whisper &amp; ML Ready</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div class="breadcrumb-title">
+          Call Intelligence / <span>Live Review</span>
+        </div>
+        <div class="header-right">
+          <div class="stat-pill">
+            <div class="stat-pill-label">Model Accuracy</div>
+            <div class="stat-pill-val mono">98.8%</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-pill-label">Selected Classifier</div>
+            <div class="stat-pill-val" style="font-size: 12px; color: var(--accent);">Logistic Regression</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Container -->
+      <main class="content-container">
+        <!-- Hero Header -->
+        <div class="hero-header">
+          <div>
+            <div class="hero-pill">
+              <span class="hero-pill-dot"></span>
+              Decision Surface
+            </div>
+            <h1 class="hero-title">
+              Turn a noisy call<br>
+              <span>into a clear next step.</span>
+            </h1>
+            <p class="hero-sub">
+              Upload an audio recording or paste a call transcript. CallShield uses open-source OpenAI Whisper to extract speech, followed by the trained Machine Learning pipeline to detect fraudulent and spam calls instantly.
+            </p>
+          </div>
+
+          <div class="hero-stats-banner">
+            <div class="hero-stat-item">
+              <div class="label">Benchmark F1-Score</div>
+              <div class="val mono" style="color: var(--accent);">98.8%</div>
+            </div>
+            <div class="hero-stat-item">
+              <div class="label">Whisper STT</div>
+              <div class="val mono" style="color: var(--text-main);">Local Base</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Threat Intelligence & Performance Telemetry Grid -->
+        <div class="kpi-telemetry-grid">
+          <div class="kpi-telemetry-card">
+            <div class="kpi-card-header">
+              <span class="kpi-card-label">Holdout Test Accuracy</span>
+              <svg class="kpi-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div class="kpi-card-val mono" style="color: var(--accent);">98.8%</div>
+            <div class="kpi-card-sub">Evaluated on 160 unseen stratified test calls</div>
+          </div>
+
+          <div class="kpi-telemetry-card">
+            <div class="kpi-card-header">
+              <span class="kpi-card-label">Benchmark F1-Score</span>
+              <svg class="kpi-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+            </div>
+            <div class="kpi-card-val mono" style="color: var(--accent);">98.8%</div>
+            <div class="kpi-card-sub">Harmonic mean of precision &amp; recall</div>
+          </div>
+
+          <div class="kpi-telemetry-card">
+            <div class="kpi-card-header">
+              <span class="kpi-card-label">Dataset Ground Truth</span>
+              <svg class="kpi-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            </div>
+            <div class="kpi-card-val mono">800 Calls</div>
+            <div class="kpi-card-sub">Balanced: 400 Legitimate / 400 Spam</div>
+          </div>
+
+          <div class="kpi-telemetry-card">
+            <div class="kpi-card-header">
+              <span class="kpi-card-label">Inference Engine</span>
+              <svg class="kpi-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div class="kpi-card-val" style="font-size: 16px; margin-top: 4px;">Whisper + PyAV</div>
+            <div class="kpi-card-sub">16kHz audio decode · Local inference</div>
+          </div>
+        </div>
+
+        <!-- 6-Stage Pipeline Flow Strip -->
+        <div class="pipeline-flow-strip" aria-label="End-to-end detection pipeline">
+          <div class="pipeline-step active">
+            <span class="pipeline-step-badge">1</span>
+            <span>Upload Audio</span>
+          </div>
+          <span class="pipeline-arrow">➔</span>
+          <div class="pipeline-step active">
+            <span class="pipeline-step-badge">2</span>
+            <span>Audio Waveform</span>
+          </div>
+          <span class="pipeline-arrow">➔</span>
+          <div class="pipeline-step active">
+            <span class="pipeline-step-badge">3</span>
+            <span>Whisper STT</span>
+          </div>
+          <span class="pipeline-arrow">➔</span>
+          <div class="pipeline-step active">
+            <span class="pipeline-step-badge">4</span>
+            <span>NLP Features</span>
+          </div>
+          <span class="pipeline-arrow">➔</span>
+          <div class="pipeline-step active">
+            <span class="pipeline-step-badge">5</span>
+            <span>SPAM / NOT SPAM</span>
+          </div>
+          <span class="pipeline-arrow">➔</span>
+          <div class="pipeline-step active">
+            <span class="pipeline-step-badge">6</span>
+            <span>Confidence &amp; Signals</span>
+          </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+
+        <!-- Two Column Main Surface -->
+        <div class="grid-2col">
+          <!-- Left Column: Input / Upload Panel -->
+          <div class="card-surface">
+            <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--accent);">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>
+              </svg>
+              <span>Input Call Recording</span>
+            </h2>
+
+            <!-- Mode Tabs -->
+            <div class="mode-tabs">
+              <button type="button" class="mode-tab-btn active" data-mode="upload">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Audio
+              </button>
+              <button type="button" class="mode-tab-btn" data-mode="mic">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                Record Mic
+              </button>
+              <button type="button" class="mode-tab-btn" data-mode="text">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Paste Text
+              </button>
+            </div>
+
+            <!-- Upload Panel -->
+            <div id="panel-upload">
+              <input type="file" id="audio-file-input" accept=".wav,.mp3,.m4a,.ogg,.webm,.flac" style="display: none;">
+              
+              <div class="dropzone" id="dropzone">
+                <div class="dropzone-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 36px; height: 36px; color: var(--accent);">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div class="dropzone-title">Click to select or drag &amp; drop call recording</div>
+                <div class="dropzone-hint">Compatible with phone recordings, voicemails, and audio files</div>
+                <div class="dropzone-formats">
+                  <span class="format-pill">WAV</span>
+                  <span class="format-pill">MP3</span>
+                  <span class="format-pill">M4A</span>
+                  <span class="format-pill">OGG</span>
+                  <span class="format-pill">WEBM</span>
+                </div>
+              </div>
+
+              <!-- Selected File Box -->
+              <div class="selected-file-box hidden" id="selected-file-box">
+                <div class="file-info">
+                  <div class="file-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;">
+                      <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="file-name" id="selected-file-name">recording.mp3</div>
+                    <div class="file-size" id="selected-file-size">0 KB</div>
+                  </div>
+                </div>
+                <button type="button" class="remove-file-btn" id="remove-file-btn" title="Remove file">✕</button>
+              </div>
+
+              <!-- Audio Waveform Player Preview -->
+              <div class="audio-player-wrapper hidden" id="audio-preview">
+                <div class="waveform-header">
+                  <div class="waveform-title-row">
+                    <span class="waveform-dot"></span>
+                    <span class="waveform-title">Audio Waveform &amp; Playback</span>
+                  </div>
+                  <div class="waveform-time mono" id="waveform-time-display">00:00 / 00:00</div>
+                </div>
+
+                <!-- Interactive Waveform Canvas Container -->
+                <div class="waveform-canvas-box" id="waveform-canvas-box" title="Click or drag anywhere to seek timestamp">
+                  <canvas id="waveform-canvas" height="96"></canvas>
+                  <div class="waveform-cursor" id="waveform-cursor">
+                    <span class="waveform-cursor-handle"></span>
+                  </div>
+                  <div class="waveform-hover-tooltip hidden" id="waveform-hover-tooltip">00:00</div>
+                  <div class="waveform-loading hidden" id="waveform-loading">
+                    <div class="spinner"></div>
+                    <span>Decoding audio waveform...</span>
+                  </div>
+                </div>
+
+                <!-- Controls Bar -->
+                <div class="waveform-controls-bar">
+                  <button type="button" class="waveform-play-toggle" id="waveform-play-btn" title="Play / Pause Audio">
+                    <span id="waveform-play-icon" style="display: grid; place-items: center;">
+                      <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </span>
+                  </button>
+
+                  <div class="waveform-meta-info">
+                    <span class="waveform-track-name" id="waveform-track-name">recording.mp3</span>
+                    <span class="waveform-hint mono">Live Audio Waveform · Click to seek</span>
+                  </div>
+
+                  <div class="waveform-volume-control">
+                    <button type="button" class="waveform-mute-toggle" id="waveform-mute-btn" title="Mute / Unmute">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Acoustic Waveform Disclaimer Notice -->
+                <div class="waveform-notice-banner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                  <div>
+                    <strong>Acoustic Waveform Visualizer:</strong> Aids timeline scrub and human audio verification. Machine learning classification evaluates the transcribed speech text via TF-IDF &amp; Chi-Square feature engineering.
+                  </div>
+                </div>
+
+                <!-- Underlying Native Audio Element -->
+                <audio id="audio-player" preload="auto" style="display: none;"></audio>
+              </div>
+
+              <!-- Live Transcribed Review & Manual Editing Box -->
+              <div class="transcribed-preview-box hidden" id="transcribed-preview-box" style="margin-top: 14px; padding: 14px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--accent);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px;">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    <span>Whisper Speech Transcription</span>
+                  </div>
+                  <span id="transcribe-status-pill" class="format-pill" style="font-size: 10px; background: rgba(196, 241, 34, 0.15); color: var(--accent);">Ready to Review</span>
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+                  Review and manually edit the transcribed text before ML prediction:
+                </p>
+                <textarea id="live-transcript-editor" class="transcript-textarea" style="min-height: 85px; font-size: 13px;" placeholder="Transcribed text will appear here... You can edit any misheard words manually."></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                  <span style="font-size: 11px; color: var(--text-muted);">Edits made here will be evaluated by the model.</span>
+                  <div style="display: flex; gap: 6px;">
+                    <button type="button" id="retranscribe-btn" class="btn-secondary" style="font-size: 11px; padding: 4px 10px;" title="Re-run Whisper STT on audio">
+                      🔄 Re-transcribe
+                    </button>
+                    <button type="button" id="copy-to-text-tab-btn" class="btn-secondary" style="font-size: 11px; padding: 4px 10px;" title="Send to Paste Text Tab">
+                      📋 Send to Text Tab
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Preloaded Samples -->
+              <div class="sample-calls-strip">
+                <span class="sample-calls-label">Or test with demo call recordings:</span>
+                <div class="sample-btns-grid">
+                  <button type="button" class="sample-btn spam" onclick="loadSampleAudio('callshield_spam_call.mp3')">
+                    <div class="sample-btn-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="sample-btn-title">Spam Call Sample</span>
+                      <span class="sample-btn-sub">Urgent Bank Security Alert</span>
+                    </div>
+                  </button>
+                  <button type="button" class="sample-btn legit" onclick="loadSampleAudio('callshield_not_spam_call.mp3')">
+                    <div class="sample-btn-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="sample-btn-title">Legitimate Call Sample</span>
+                      <span class="sample-btn-sub">Clinic Appointment Reminder</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Microphone Panel -->
+            <div id="panel-mic" class="hidden">
+              <div class="mic-record-panel">
+                <button type="button" class="mic-pulse-btn" id="mic-btn" title="Click to record">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>
+                  </svg>
+                </button>
+                <div class="recording-timer mono hidden" id="mic-timer">00:00</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text-main);" id="mic-status">
+                  Click microphone to record call audio
+                </div>
+                <!-- Live Audio Level Meter -->
+                <div id="mic-level-box" class="mic-level-box hidden">
+                  <div class="mic-level-bar-wrap">
+                    <div class="mic-level-bar-fill" id="mic-level-fill"></div>
+                  </div>
+                  <div class="mic-level-label" id="mic-level-label">Microphone active · Capturing crystal-clear audio</div>
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                  High-fidelity 16kHz uncompressed audio recording with automatic OpenAI Whisper speech transcription.
+                </p>
+              </div>
+            </div>
+
+            <!-- Text Paste Panel -->
+            <div id="panel-text" class="hidden">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label for="transcript-input" style="font-size: 12px; font-weight: 600; color: var(--text-main);">Manual Call Transcript</label>
+                <span class="mono text-muted" style="font-size: 11px;" id="text-char-count">0 characters</span>
+              </div>
+              <textarea class="transcript-textarea" id="transcript-input" placeholder="Paste or type a phone call transcript here (e.g. 'Greetings, this is an urgent security notification from your bank account...')"></textarea>
+              <div class="sample-calls-strip" style="margin-top: 10px;">
+                <span class="sample-calls-label">Quick fill test scripts:</span>
+                <div class="sample-btns-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
+                  <button type="button" class="sample-btn spam" onclick="quickFillScript('digital_arrest')" style="padding: 6px 10px;">
+                    <div>
+                      <span class="sample-btn-title" style="font-size: 11px;">Digital Arrest</span>
+                      <span class="sample-btn-sub" style="font-size: 10px;">Police Cheque Scam</span>
+                    </div>
+                  </button>
+                  <button type="button" class="sample-btn spam" onclick="quickFillScript('bank_otp')" style="padding: 6px 10px;">
+                    <div>
+                      <span class="sample-btn-title" style="font-size: 11px;">Bank Account Alert</span>
+                      <span class="sample-btn-sub" style="font-size: 10px;">Card &amp; OTP Fraud</span>
+                    </div>
+                  </button>
+                  <button type="button" class="sample-btn legit" onclick="quickFillScript('clinic')" style="padding: 6px 10px;">
+                    <div>
+                      <span class="sample-btn-title" style="font-size: 11px;">Clinic Appointment</span>
+                      <span class="sample-btn-sub" style="font-size: 10px;">Legitimate Checkup</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="analyze-btn-row">
+              <button type="button" class="btn-primary" id="analyze-btn">
+                <div class="spinner hidden" id="analyze-spinner"></div>
+                <span id="analyze-btn-text">Analyze Call</span>
+              </button>
+              <button type="button" class="btn-secondary" id="reset-btn">Reset</button>
+            </div>
+          </div>
+
+          <!-- Right Column: Results & Verdict Surface -->
+          <div>
+            <div id="result-surface" class="result-surface hidden">
+              <!-- Classification Verdict Banner -->
+              <div class="verdict-banner" id="verdict-banner">
+                <div class="verdict-left">
+                  <div class="verdict-icon" id="verdict-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 26px; height: 26px;">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="verdict-tag" id="verdict-tag">DETECTION VERDICT</div>
+                    <div class="verdict-title" id="verdict-title">NOT SPAM</div>
+                    <div id="verdict-subrisk" class="hidden" style="margin-top: 4px; font-size: 11px; font-weight: 600; font-family: var(--font-mono); opacity: 0.9;"></div>
+                  </div>
+                </div>
+                <div class="verdict-conf-box">
+                  <div class="conf-label">Confidence</div>
+                  <div class="conf-value mono" id="verdict-confidence">0.0%</div>
+                </div>
+              </div>
+
+              <!-- Prediction Distinction Chip Banner -->
+              <div class="prediction-distinction-banner" id="prediction-distinction-banner">
+                <div class="distinction-item">
+                  <span class="distinction-label">Deployed Classifier:</span>
+                  <span class="distinction-val" id="result-model-name">Logistic Regression (C=10, L2)</span>
+                </div>
+                <div class="distinction-item">
+                  <span class="distinction-label">Single-Call Calibrated Confidence:</span>
+                  <span class="distinction-val mono" style="color: var(--accent);" id="result-conf-repeat">0.0%</span>
+                </div>
+                <div class="distinction-item">
+                  <span class="distinction-label">Benchmark Test Accuracy:</span>
+                  <span class="distinction-val mono">98.8%</span>
+                </div>
+              </div>
+
+              <!-- Transcribed Speech Section -->
+              <div class="transcript-card">
+                <div class="transcript-header">
+                  <div class="section-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 15px; height: 15px; color: var(--accent);">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    <span>Whisper Speech Transcript</span>
+                  </div>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" id="edit-from-results-btn" class="btn-secondary" style="font-size: 11px; padding: 3px 8px;" title="Edit words in transcript and re-test prediction">
+                      ✏️ Edit &amp; Re-Analyze
+                    </button>
+                    <span class="format-pill mono" id="language-tag">EN</span>
+                    <span class="format-pill mono" id="duration-tag">0.0s</span>
+                  </div>
+                </div>
+                <div class="transcript-text" id="transcript-result">
+                  "..."
+                </div>
+
+                <!-- Segments Container -->
+                <div id="segments-container" class="hidden" style="margin-top: 14px;">
+                  <div style="font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">
+                    Detected Speech Segments
+                  </div>
+                  <div class="segments-list" id="segments-list"></div>
+                </div>
+              </div>
+
+              <!-- Contextual Call Signals -->
+              <div class="signals-grid">
+                <div class="signal-card">
+                  <div class="signal-card-title">Urgency Signals</div>
+                  <div class="signal-card-val mono" id="urgency-count">0</div>
+                  <div class="signal-card-pills" id="urgency-matches"></div>
+                </div>
+                <div class="signal-card">
+                  <div class="signal-card-title">Financial Keywords</div>
+                  <div class="signal-card-val mono" id="money-count">0</div>
+                  <div class="signal-card-pills" id="money-matches"></div>
+                </div>
+                <div class="signal-card">
+                  <div class="signal-card-title">Security &amp; OTP</div>
+                  <div class="signal-card-val mono" id="security-count">0</div>
+                  <div class="signal-card-pills" id="security-matches"></div>
+                </div>
+              </div>
+
+              <!-- Multi-Model Decision Comparison -->
+              <div class="models-table-card">
+                <div class="table-header-row">
+                  <div>
+                    <h3 style="font-size: 13px; font-weight: 700;">Multi-Classifier Consensus</h3>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                      All candidate models from the evaluation suite scored this call
+                    </div>
+                  </div>
+                  <a href="/models" style="font-size: 11px; color: var(--accent); text-decoration: none; font-weight: 600;">
+                    View Bench →
+                  </a>
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Algorithm</th>
+                        <th>Classification</th>
+                        <th>Confidence</th>
+                        <th>Test Acc</th>
+                        <th>Test F1</th>
+                      </tr>
+                    </thead>
+                    <tbody id="models-table-body">
+                      <!-- Populated dynamically via main.js -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Placeholder State when no call is analyzed yet -->
+            <div id="placeholder-surface" class="card-surface" style="text-align: center; padding: 48px 24px; color: var(--text-muted);">
+              <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: var(--bg-card-alt); border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border-color);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 32px; height: 32px; color: var(--accent);">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">
+                Awaiting Call Analysis
+              </h3>
+              <p style="font-size: 13px; max-width: 400px; margin: 0 auto; line-height: 1.6;">
+                Upload an audio file or select one of the demo samples above to begin Whisper speech-to-text and model classification.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session History Section -->
+        <div class="history-section">
+          <div class="history-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h3 style="font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; color: var(--accent);">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  <span>Analysis Session History Log</span>
+                </h3>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                  Audit trail of phone calls analyzed in this review session
+                </p>
+              </div>
+
+              <div class="history-filter-bar">
+                <input type="text" id="history-search-input" class="history-search-input" placeholder="Search history..." title="Filter by filename or transcript">
+                <select id="history-filter-select" class="history-select" title="Filter by verdict">
+                  <option value="all">All Verdicts</option>
+                  <option value="spam">Spam Only</option>
+                  <option value="legit">Not Spam Only</option>
+                </select>
+                <button type="button" id="clear-history-btn" style="background: none; border: 1px solid var(--border-color); padding: 5px 10px; border-radius: var(--radius-sm); font-size: 11px; color: var(--text-muted); cursor: pointer;">
+                  Clear Log
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="history-data-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Source / File</th>
+                    <th>Transcript Excerpt</th>
+                    <th>Classifier Model</th>
+                    <th>Verdict</th>
+                    <th>Confidence</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  <!-- Rendered dynamically via main.js -->
+                </tbody>
+              </table>
+            </div>
+            <div id="history-empty-state" class="hidden" style="text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13px;">
+              No call analyses match the search filter.
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

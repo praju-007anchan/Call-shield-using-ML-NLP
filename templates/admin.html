@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CallShield - Station Administration &amp; System Telemetry</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23c4f122%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z%22/><path d=%22m9 12 2 2 4-4%22/></svg>">
+</head>
+<body class="signal-grid">
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-section">
+        <a href="/" class="brand-logo">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <span class="brand-name">CallShield</span>
+        </a>
+        <div class="brand-tagline">Review Workspace</div>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="/" class="nav-item" id="nav-analyze">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span>Analyze Call</span>
+        </a>
+        <a href="/models" class="nav-item" id="nav-models">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>Model Bench</span>
+        </a>
+        <a href="/admin" class="nav-item active" id="nav-admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/></svg>
+          <span>Admin Console</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 8px 10px; background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); border: 1px solid var(--border-sidebar);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--accent);">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span class="mono" style="font-size: 12px; color: var(--text-sidebar);">{{ session.get('username', 'Admin') }}</span>
+          </div>
+          <a href="/logout" style="color: var(--primary); font-size: 11px; text-decoration: none; font-weight: 600;" title="Sign Out">Logout</a>
+        </div>
+        <div class="system-status">
+          <span>Station Status</span>
+          <span class="status-dot"></span>
+        </div>
+        <div class="status-badge">
+          <span>Administrator Mode Active</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div class="breadcrumb-title">
+          Call Intelligence / <span>Station Administration</span>
+        </div>
+        <div class="header-right">
+          <a href="/" class="btn-primary" style="padding: 8px 16px; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
+              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            <span>Live Workspace</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- Main Container -->
+      <main class="content-container">
+        <!-- Hero Header -->
+        <div class="hero-header">
+          <div>
+            <div class="hero-pill">
+              <span class="hero-pill-dot"></span>
+              Administrative Console
+            </div>
+            <h1 class="hero-title">
+              Station Telemetry &amp;<br>
+              <span>System Operations</span>
+            </h1>
+            <p class="hero-sub">
+              Centralized administrative oversight for CallShield. Inspect persistent analyst authentication credentials, speech pipeline configuration, and machine learning serialization integrity.
+            </p>
+          </div>
+
+          <div class="hero-stats-banner">
+            <div class="hero-stat-item">
+              <div class="label">Access Control</div>
+              <div class="val mono" style="color: var(--accent);">Role: Admin</div>
+            </div>
+            <div class="hero-stat-item">
+              <div class="label">User Accounts</div>
+              <div class="val mono" style="color: var(--text-main);">{{ users|length }} Active</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Telemetry Grid -->
+        <div class="grid-3col" style="margin-bottom: 24px;">
+          <div class="card-surface" style="padding: 16px 20px;">
+            <div class="stat-pill-label">Audio Demuxer</div>
+            <div style="font-weight: 700; margin-top: 4px; font-size: 14px; color: var(--text-main);">PyAV (16kHz Mono Float32)</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Direct Python C-binding (No ffmpeg.exe required)</div>
+          </div>
+          <div class="card-surface" style="padding: 16px 20px;">
+            <div class="stat-pill-label">Whisper STT Engine</div>
+            <div style="font-weight: 700; margin-top: 4px; font-size: 14px; color: var(--text-main);">OpenAI Whisper (Local Base)</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Automatic language detection &amp; timestamped segments</div>
+          </div>
+          <div class="card-surface" style="padding: 16px 20px;">
+            <div class="stat-pill-label">Feature Pipeline</div>
+            <div style="font-weight: 700; margin-top: 4px; font-size: 14px; color: var(--text-main);">TF-IDF (1,2) + Chi2 (k=1500)</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Target leakage guard: clean_text only</div>
+          </div>
+        </div>
+
+        <!-- SECTION 1: REGISTERED ANALYST ACCOUNTS -->
+        <div class="card-surface" style="margin-bottom: 28px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h2 style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; color: var(--accent);">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Registered Workstation Accounts (Persistent Store: users.json)</span>
+              </h2>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Credentials are permanently stored and persist across server restarts.
+              </p>
+            </div>
+            <span class="tag-badge info" style="font-size: 11px;">{{ users|length }} Total Accounts</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Credential Storage</th>
+                  <th>Created / Updated Timestamp</th>
+                  <th>Account Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for uname, udata in users.items() %}
+                <tr>
+                  <td class="mono font-semibold">{{ uname }}</td>
+                  <td>
+                    <span class="tag-badge {{ 'winner' if uname == 'admin' else 'legit' }}">
+                      {{ 'Administrator' if uname == 'admin' else 'Security Analyst' }}
+                    </span>
+                  </td>
+                  <td class="mono text-muted">users.json (SHA-256 Hashed)</td>
+                  <td class="mono">{{ udata.get('updated_at') or udata.get('created_at') or '2026-01-01' }}</td>
+                  <td>
+                    <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--success-text);">
+                      <span class="status-dot" style="position: static; display: inline-block;"></span>
+                      Authorized
+                    </span>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 2: SYSTEM ARTIFACTS & ML REPRODUCIBILITY -->
+        <div class="grid-2col-equal" style="margin-bottom: 28px;">
+          <!-- Model Artifact Integrity -->
+          <div class="card-surface">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 17px; height: 17px; color: var(--accent);">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+              <span>Serialized Model Artifacts</span>
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+              <div style="background: var(--bg-card-alt); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600;">model.pkl</div>
+                  <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                    Size: {{ model_stat.size_kb }} KB · Last Modified: {{ model_stat.mtime }}
+                  </div>
+                </div>
+                <span class="tag-badge {{ 'winner' if model_stat.exists else 'spam' }}">
+                  {{ 'Loaded & Verified' if model_stat.exists else 'Missing' }}
+                </span>
+              </div>
+
+              <div style="background: var(--bg-card-alt); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600;">model_metrics.json</div>
+                  <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                    5 Algorithms Evaluated · 98.75% Holdout F1-Score
+                  </div>
+                </div>
+                <span class="tag-badge winner">Active Manifest</span>
+              </div>
+
+              <div style="background: var(--bg-card-alt); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600;">dataset.csv</div>
+                  <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                    800 Call Records (50% Spam, 50% Legitimate)
+                  </div>
+                </div>
+                <span class="tag-badge legit">Balanced Ground Truth</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Audio Engine & Environment -->
+          <div class="card-surface">
+            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 17px; height: 17px; color: var(--accent);">
+                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              <span>Server Environment &amp; Audio Demuxing</span>
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+              <div style="background: var(--bg-card-alt); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600;">Maximum Audio Upload Payload</div>
+                  <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                    Enforced by Flask MAX_CONTENT_LENGTH
+                  </div>
+                </div>
+                <span class="mono font-semibold" style="font-size: 14px; color: var(--accent);">25 MB</span>
+              </div>
+
+              <div style="background: var(--bg-card-alt); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600;">Supported Audio Encodings</div>
+                  <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                    WAV, MP3, M4A, OGG, WEBM, FLAC
+                  </div>
+                </div>
+                <span class="tag-badge legit">Multi-Format PyAV</span>
+              </div>
+
+              <div style="background: var(--bg-card-alt); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600;">Whisper Speech Sampling</div>
+                  <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                    Standard 16,000 Hz Mono Float32 Tensor
+                  </div>
+                </div>
+                <span class="mono font-semibold" style="font-size: 13px;">16 kHz mono</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: SERVER AUDIT LOG -->
+        <div class="card-surface">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 17px; height: 17px; color: var(--accent);">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span>Recent Server Inspection History (Last 25 Analyzed Calls)</span>
+            </h3>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted);">
+              Server Buffer: {{ server_history|length }} entries
+            </span>
+          </div>
+
+          {% if server_history %}
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Source / Filename</th>
+                  <th>Transcript Excerpt</th>
+                  <th>Model Used</th>
+                  <th>Verdict</th>
+                  <th>Confidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entry in server_history %}
+                <tr>
+                  <td class="mono text-muted" style="white-space: nowrap;">{{ entry.timestamp }}</td>
+                  <td class="font-semibold">{{ entry.filename }}</td>
+                  <td style="max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted);" title="{{ entry.transcript }}">
+                    "{{ entry.transcript[:100] }}..."
+                  </td>
+                  <td class="mono">{{ entry.model }}</td>
+                  <td>
+                    <span class="tag-badge {{ 'spam' if entry.prediction == 'SPAM' else 'legit' }}">
+                      {{ entry.prediction }}
+                    </span>
+                  </td>
+                  <td class="mono font-semibold">{{ (entry.confidence * 100)|round(1) }}%</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div style="text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13px;">
+            No calls analyzed on the server in the current uptime window. Upload an audio recording on the live workspace to populate this log.
+          </div>
+          {% endif %}
+        </div>
+
+      </main>
+    </div>
+  </div>
+</body>
+</html>
